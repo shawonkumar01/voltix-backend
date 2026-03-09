@@ -1,6 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './users/user.entity';
+import { Category } from './categories/category.entity';
+import { Product } from './products/product.entity';
+import { Cart } from './cart/cart.entity';
+import { CartItem } from './cart/cart-item.entity';
+import { Order } from './orders/order.entity';
+import { OrderItem } from './orders/order-item.entity';
+import { Review } from './reviews/review.entity';
+import { Wishlist } from './wishlist/wishlist.entity';
 
 @Module({
   imports: [
@@ -14,7 +23,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         username: config.get<string>('DB_USERNAME', 'postgres'),
         password: config.get<string>('DB_PASSWORD', ''),
         database: config.get<string>('DB_NAME', 'voltix'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        entities: [
+          User,
+          Category,
+          Product,
+          Cart,
+          CartItem,
+          Order,
+          OrderItem,
+          Review,
+          Wishlist,
+        ],
         synchronize: true,
       }),
       inject: [ConfigService],
