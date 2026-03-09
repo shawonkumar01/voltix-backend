@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
 import { User } from './users/user.entity';
 import { Category } from './categories/category.entity';
 import { Product } from './products/product.entity';
@@ -24,20 +25,16 @@ import { Wishlist } from './wishlist/wishlist.entity';
         password: config.get<string>('DB_PASSWORD', ''),
         database: config.get<string>('DB_NAME', 'voltix'),
         entities: [
-          User,
-          Category,
-          Product,
-          Cart,
-          CartItem,
-          Order,
-          OrderItem,
-          Review,
-          Wishlist,
+          User, Category, Product,
+          Cart, CartItem,
+          Order, OrderItem,
+          Review, Wishlist,
         ],
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
   ],
 })
 export class AppModule {}
