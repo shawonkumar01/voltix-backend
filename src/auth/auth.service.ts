@@ -2,6 +2,7 @@ import {
     Injectable,
     ConflictException,
     UnauthorizedException,
+    BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,39 +21,49 @@ export class AuthService {
     ) { }
 
     async register(dto: RegisterDto) {
-        // Check if email already exists
+        if (!dto.email || !dto.password) {
+            throw new BadRequestException('Email and password are required');
+        }
+
         const existing = await this.userRepo.findOne({
             where: { email: dto.email },
         });
-        if (existing) throw new ConflictException('Email already registered');
+        if (existing) {
+            throw new ConflictException('An account with this email already exists');
+        }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-        // Create user
         const user = this.userRepo.create({
             ...dto,
             password: hashedPassword,
         });
 
         await this.userRepo.save(user);
-
-        // Return token
         return this.generateToken(user);
     }
 
     async login(dto: LoginDto) {
-        // Find user
+        if (!dto.email || !dto.password) {
+            throw new BadRequestException('Email and password are required');
+        }
+
         const user = await this.userRepo.findOne({
             where: { email: dto.email },
         });
-        if (!user) throw new UnauthorizedException('Invalid credentials');
+        if (!user) {
+            throw new UnauthorizedException('No account found with this email');
+        }
 
-        // Check password
+        if (!user.isActive) {
+            throw new UnauthorizedException('Your account has been deactivated');
+        }
+
         const isMatch = await bcrypt.compare(dto.password, user.password);
-        if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+        if (!isMatch) {
+            throw new UnauthorizedException('Incorrect password');
+        }
 
-        // Return token
         return this.generateToken(user);
     }
 
