@@ -11,6 +11,7 @@ import { Order } from './orders/order.entity';
 import { OrderItem } from './orders/order-item.entity';
 import { Review } from './reviews/review.entity';
 import { Wishlist } from './wishlist/wishlist.entity';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { Wishlist } from './wishlist/wishlist.entity';
       inject: [ConfigService],
     }),
     AuthModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
