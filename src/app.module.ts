@@ -12,6 +12,7 @@ import { OrderItem } from './orders/order-item.entity';
 import { Review } from './reviews/review.entity';
 import { Wishlist } from './wishlist/wishlist.entity';
 import { UsersModule } from './users/users.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { UsersModule } from './users/users.module';
     }),
     AuthModule,
     UsersModule,
+    CategoriesModule,
   ],
 })
 export class AppModule {}
