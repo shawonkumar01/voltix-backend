@@ -13,6 +13,7 @@ import { Review } from './reviews/review.entity';
 import { Wishlist } from './wishlist/wishlist.entity';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
 
 @Module({
   imports: [
@@ -39,6 +40,8 @@ import { CategoriesModule } from './categories/categories.module';
     AuthModule,
     UsersModule,
     CategoriesModule,
+    ProductsModule,
+    
   ],
 })
 export class AppModule {}
