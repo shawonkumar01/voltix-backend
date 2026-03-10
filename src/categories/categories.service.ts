@@ -4,56 +4,30 @@ import {
     ConflictException,
     BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Category } from './category.entity';
+import { CategoriesRepository } from './categories.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @Injectable()
 export class CategoriesService {
-    constructor(
-        @InjectRepository(Category)
-        private readonly categoryRepo: Repository<Category>,
-    ) { }
+    constructor(private readonly categoriesRepository: CategoriesRepository) { }
 
     async create(dto: CreateCategoryDto) {
-        if (!dto.name) {
-            throw new BadRequestException('Category name is required');
-        }
-
-        const existing = await this.categoryRepo.findOne({
-            where: { name: dto.name },
-        });
+        const existing = await this.categoriesRepository.findByName(dto.name);
         if (existing) {
-            throw new ConflictException(
-                `Category with name "${dto.name}" already exists`,
-            );
+            throw new ConflictException(`Category "${dto.name}" already exists`);
         }
-
-        const category = this.categoryRepo.create(dto);
-        return this.categoryRepo.save(category);
+        return this.categoriesRepository.create(dto);
     }
 
     async findAll() {
-        const categories = await this.categoryRepo.find({
-            where: { isActive: true },
-        });
-        if (!categories.length) {
-            return { message: 'No categories found', data: [] };
-        }
+        const categories = await this.categoriesRepository.findAll();
+        if (!categories.length) return { message: 'No categories found', data: [] };
         return categories;
     }
 
     async findOne(id: string) {
-        if (!id) {
-            throw new BadRequestException('Category id is required');
-        }
-
-        const category = await this.categoryRepo.findOne({
-            where: { id },
-            relations: ['products'],
-        });
+        const category = await this.categoriesRepository.findById(id);
         if (!category) {
             throw new NotFoundException(`Category with id "${id}" not found`);
         }
@@ -61,56 +35,33 @@ export class CategoriesService {
     }
 
     async update(id: string, dto: UpdateCategoryDto) {
-        if (!id) {
-            throw new BadRequestException('Category id is required');
-        }
-
         if (Object.keys(dto).length === 0) {
             throw new BadRequestException('No fields provided to update');
         }
-
-        const category = await this.categoryRepo.findOne({ where: { id } });
+        const category = await this.categoriesRepository.findById(id);
         if (!category) {
             throw new NotFoundException(`Category with id "${id}" not found`);
         }
-
-        // Check if new name conflicts with existing category
         if (dto.name && dto.name !== category.name) {
-            const nameExists = await this.categoryRepo.findOne({
-                where: { name: dto.name },
-            });
+            const nameExists = await this.categoriesRepository.findByName(dto.name);
             if (nameExists) {
-                throw new ConflictException(
-                    `Category with name "${dto.name}" already exists`,
-                );
+                throw new ConflictException(`Category "${dto.name}" already exists`);
             }
         }
-
-        await this.categoryRepo.update(id, dto);
-        return this.categoryRepo.findOne({ where: { id } });
+        return this.categoriesRepository.update(id, dto);
     }
 
     async remove(id: string) {
-        if (!id) {
-            throw new BadRequestException('Category id is required');
-        }
-
-        const category = await this.categoryRepo.findOne({
-            where: { id },
-            relations: ['products'],
-        });
+        const category = await this.categoriesRepository.findById(id);
         if (!category) {
             throw new NotFoundException(`Category with id "${id}" not found`);
         }
-
-        // Prevent deleting category that has products
         if (category.products && category.products.length > 0) {
             throw new BadRequestException(
-                `Cannot delete category "${category.name}" because it has ${category.products.length} products. Remove products first.`,
+                `Cannot delete "${category.name}" — it has ${category.products.length} products`,
             );
         }
-
-        await this.categoryRepo.remove(category);
+        await this.categoriesRepository.remove(category);
         return { message: `Category "${category.name}" deleted successfully` };
     }
 }

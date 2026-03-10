@@ -1,137 +1,71 @@
 import {
-    Injectable,
-    NotFoundException,
-    ConflictException,
-    BadRequestException,
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Product } from './product.entity';
+import { ProductsRepository } from './products.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductDto } from './dto/filter-product.dto';
 
 @Injectable()
 export class ProductsService {
-    constructor(
-        @InjectRepository(Product)
-        private readonly productRepo: Repository<Product>,
-    ) { }
+  constructor(private readonly productsRepository: ProductsRepository) {}
 
-    async create(dto: CreateProductDto) {
-        const existing = await this.productRepo.findOne({
-            where: { name: dto.name },
-        });
-        if (existing) {
-            throw new ConflictException(
-                `Product with name "${dto.name}" already exists`,
-            );
-        }
-
-        const product = this.productRepo.create(dto);
-        return this.productRepo.save(product);
+  async create(dto: CreateProductDto) {
+    const existing = await this.productsRepository.findByName(dto.name);
+    if (existing) {
+      throw new ConflictException(`Product "${dto.name}" already exists`);
     }
+    return this.productsRepository.create(dto);
+  }
 
-    async findAll(filters: FilterProductDto) {
-        const {
-            search,
-            categoryId,
-            brand,
-            minPrice,
-            maxPrice,
-            page = 1,
-            limit = 10,
-        } = filters;
+  async findAll(filters: FilterProductDto) {
+    const { data, total, page, limit } =
+      await this.productsRepository.findAll(filters);
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
 
-        const query = this.productRepo
-            .createQueryBuilder('product')
-            .leftJoinAndSelect('product.category', 'category')
-            .where('product.isActive = :isActive', { isActive: true });
-
-        if (search) {
-            query.andWhere(
-                '(LOWER(product.name) LIKE :search OR LOWER(product.description) LIKE :search)',
-                { search: `%${search.toLowerCase()}%` },
-            );
-        }
-
-        if (categoryId) {
-            query.andWhere('product.categoryId = :categoryId', { categoryId });
-        }
-
-        if (brand) {
-            query.andWhere('LOWER(product.brand) = :brand', {
-                brand: brand.toLowerCase(),
-            });
-        }
-
-        if (minPrice !== undefined) {
-            query.andWhere('product.price >= :minPrice', { minPrice });
-        }
-
-        if (maxPrice !== undefined) {
-            query.andWhere('product.price <= :maxPrice', { maxPrice });
-        }
-
-        const total = await query.getCount();
-        const products = await query
-            .skip((page - 1) * limit)
-            .take(limit)
-            .getMany();
-
-        return {
-            data: products,
-            meta: {
-                total,
-                page,
-                limit,
-                totalPages: Math.ceil(total / limit),
-            },
-        };
+  async findOne(id: string) {
+    const product = await this.productsRepository.findById(id);
+    if (!product) {
+      throw new NotFoundException(`Product with id "${id}" not found`);
     }
+    return product;
+  }
 
-    async findOne(id: string) {
-        const product = await this.productRepo.findOne({
-            where: { id },
-            relations: ['category', 'reviews'],
-        });
-        if (!product) {
-            throw new NotFoundException(`Product with id "${id}" not found`);
-        }
-        return product;
+  async update(id: string, dto: UpdateProductDto) {
+    if (Object.keys(dto).length === 0) {
+      throw new BadRequestException('No fields provided to update');
     }
-
-    async update(id: string, dto: UpdateProductDto) {
-        if (Object.keys(dto).length === 0) {
-            throw new BadRequestException('No fields provided to update');
-        }
-
-        const product = await this.productRepo.findOne({ where: { id } });
-        if (!product) {
-            throw new NotFoundException(`Product with id "${id}" not found`);
-        }
-
-        if (dto.name && dto.name !== product.name) {
-            const nameExists = await this.productRepo.findOne({
-                where: { name: dto.name },
-            });
-            if (nameExists) {
-                throw new ConflictException(
-                    `Product with name "${dto.name}" already exists`,
-                );
-            }
-        }
-
-        await this.productRepo.update(id, dto);
-        return this.findOne(id);
+    const product = await this.productsRepository.findById(id);
+    if (!product) {
+      throw new NotFoundException(`Product with id "${id}" not found`);
     }
-
-    async remove(id: string) {
-        const product = await this.productRepo.findOne({ where: { id } });
-        if (!product) {
-            throw new NotFoundException(`Product with id "${id}" not found`);
-        }
-        await this.productRepo.remove(product);
-        return { message: `Product "${product.name}" deleted successfully` };
+    if (dto.name && dto.name !== product.name) {
+      const nameExists = await this.productsRepository.findByName(dto.name);
+      if (nameExists) {
+        throw new ConflictException(`Product "${dto.name}" already exists`);
+      }
     }
+    return this.productsRepository.update(id, dto);
+  }
+
+  async remove(id: string) {
+    const product = await this.productsRepository.findById(id);
+    if (!product) {
+      throw new NotFoundException(`Product with id "${id}" not found`);
+    }
+    await this.productsRepository.remove(product);
+    return { message: `Product "${product.name}" deleted successfully` };
+  }
 }
