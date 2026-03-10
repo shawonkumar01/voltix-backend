@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   Min,
+  Max,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
@@ -33,6 +34,14 @@ export class UpdateProductDto {
   @Type(() => Number)
   @IsOptional()
   stock?: number;
+
+  @ApiPropertyOptional({ example: 10 })
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  @Type(() => Number)
+  @IsOptional()
+  discount?: number;
 
   @ApiPropertyOptional({ example: 'Apple' })
   @IsString()

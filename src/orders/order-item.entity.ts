@@ -1,49 +1,49 @@
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Product } from '../products/product.entity';
 
 @Entity('order_items')
 export class OrderItem {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'orderId' })
-    order: Order;
+  @ManyToOne(() => Order, (order) => order.items, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'orderId' })
+  order: Order;
 
-    @Column()
-    orderId: string;
+  @Column()
+  orderId: string;
 
-    @ManyToOne(() => Product, (product) => product.orderItems)
-    @JoinColumn({ name: 'productId' })
-    product: Product;
+  @ManyToOne(() => Product, (product) => product.orderItems)
+  @JoinColumn({ name: 'productId' })
+  product: Product;
 
-    @Column()
-    productId: string;
+  @Column()
+  productId: string;
 
-    // Snapshot of product at time of order
-    @Column()
-    productName: string;
+  // Snapshot of product at time of order
+  @Column()
+  productName: string;
 
-    @Column({ nullable: true })
-    productBrand: string;
+  @Column({ nullable: true })
+  productBrand: string;
 
-    @Column({ nullable: true })
-    productImage: string;
+  @Column({ nullable: true })
+  productImage: string;
 
-    @Column({ default: 1 })
-    quantity: number;
+  @Column({ default: 1 })
+  quantity: number;
 
-    // Price at time of order
-    @Column('decimal', { precision: 10, scale: 2 })
-    price: number;
+  // Price at time of order
+  @Column('decimal', { precision: 10, scale: 2 })
+  price: number;
 
-    @Column('decimal', { precision: 10, scale: 2 })
-    total: number;
+  @Column('decimal', { precision: 10, scale: 2 })
+  total: number;
 }

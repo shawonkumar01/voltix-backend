@@ -5,34 +5,34 @@ import { User } from './user.entity';
 
 @Injectable()
 export class UsersRepository {
-    constructor(
-        @InjectRepository(User)
-        private readonly userRepo: Repository<User>,
-    ) { }
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
+  ) {}
 
-    async findById(id: string) {
-        return this.userRepo.findOne({ where: { id } });
-    }
+  async findById(id: string) {
+    return this.userRepo.findOne({ where: { id } });
+  }
 
-    async findByEmail(email: string) {
-        return this.userRepo.findOne({ where: { email } });
-    }
+  async findByEmail(email: string) {
+    return this.userRepo.findOne({ where: { email } });
+  }
 
-    async findAll() {
-        return this.userRepo.find();
-    }
+  async findAll() {
+    return this.userRepo.find();
+  }
 
-    async create(data: Partial<User>) {
-        const user = this.userRepo.create(data);
-        return this.userRepo.save(user);
-    }
+  async create(data: Partial<User>) {
+    const user = this.userRepo.create(data);
+    return this.userRepo.save(user);
+  }
 
-    async update(id: string, data: Partial<User>) {
-        await this.userRepo.update(id, data);
-        return this.findById(id);
-    }
+  async update(id: string, data: Partial<User>) {
+    await this.userRepo.update(id, data);
+    return this.findById(id);
+  }
 
-    async remove(user: User) {
-        return this.userRepo.remove(user);
-    }
+  async remove(user: User) {
+    return this.userRepo.remove(user);
+  }
 }

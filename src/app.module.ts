@@ -30,10 +30,15 @@ import { OrdersModule } from './orders/orders.module';
         password: config.get<string>('DB_PASSWORD', ''),
         database: config.get<string>('DB_NAME', 'voltix'),
         entities: [
-          User, Category, Product,
-          Cart, CartItem,
-          Order, OrderItem,
-          Review, Wishlist,
+          User,
+          Category,
+          Product,
+          Cart,
+          CartItem,
+          Order,
+          OrderItem,
+          Review,
+          Wishlist,
         ],
         synchronize: true,
       }),
@@ -45,7 +50,6 @@ import { OrdersModule } from './orders/orders.module';
     ProductsModule,
     CartModule,
     OrdersModule,
-    
   ],
 })
 export class AppModule {}

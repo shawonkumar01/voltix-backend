@@ -11,11 +11,11 @@ import { CartItem } from '../cart/cart-item.entity';
 import { CartRepository } from '../cart/cart.repository';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Order, OrderItem, Product, Cart, CartItem]),
-    ],
-    controllers: [OrdersController],
-    providers: [OrdersService, OrdersRepository, CartRepository],
-    exports: [OrdersService],
+  imports: [
+    TypeOrmModule.forFeature([Order, OrderItem, Product, Cart, CartItem]),
+  ],
+  controllers: [OrdersController],
+  providers: [OrdersService, OrdersRepository, CartRepository],
+  exports: [OrdersService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

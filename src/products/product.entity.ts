@@ -1,12 +1,12 @@
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    CreateDateColumn,
-    UpdateDateColumn,
-    ManyToOne,
-    OneToMany,
-    JoinColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
 import { Review } from '../reviews/review.entity';
@@ -16,61 +16,82 @@ import { Wishlist } from '../wishlist/wishlist.entity';
 
 @Entity('products')
 export class Product {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    name: string;
+  @Column()
+  name: string;
 
-    @Column('text')
-    description: string;
+  @Column('text')
+  description: string;
 
-    @Column('decimal', { precision: 10, scale: 2 })
-    price: number;
+  @Column('decimal', { precision: 10, scale: 2 })
+  price: number;
 
-    @Column({ default: 0 })
-    stock: number;
+  @Column({ nullable: true, unique: true })
+  sku: string; // e.g VLT-APL-001
 
-    @Column({ nullable: true })
-    brand: string;
+  @Column({ default: 0 })
+  stock: number;
 
-    @Column({ nullable: true })
-    model: string;
+  @Column({ default: 0 })
+  soldCount: number; // increases on every order
 
-    @Column('simple-array', { nullable: true })
-    images: string[];
+  @Column({ nullable: true })
+  brand: string;
 
-    @Column({ default: 0 })
-    rating: number;
+  @Column({ nullable: true })
+  model: string;
 
-    @Column({ default: 0 })
-    reviewCount: number;
+  @Column({ nullable: true })
+  warranty: string; // e.g "1 Year Manufacturer Warranty"
 
-    @Column({ default: true })
-    isActive: boolean;
+  @Column({ nullable: true })
+  weight: number; // in grams
 
-    @ManyToOne(() => Category, (category) => category.products)
-    @JoinColumn({ name: 'categoryId' })
-    category: Category;
+  @Column({ nullable: true })
+  discount: number; // percentage e.g 10 for 10% off
 
-    @Column()
-    categoryId: string;
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  discountedPrice: number; // final price after discount
 
-    @OneToMany(() => Review, (review) => review.product)
-    reviews: Review[];
+  @Column('simple-array', { nullable: true })
+  images: string[];
 
-    @OneToMany(() => CartItem, (cartItem) => cartItem.product)
-    cartItems: CartItem[];
+  @Column({ default: 0 })
+  rating: number;
 
-    @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
-    orderItems: OrderItem[];
+  @Column({ default: 0 })
+  reviewCount: number;
 
-    @OneToMany(() => Wishlist, (wishlist) => wishlist.product)
-    wishlist: Wishlist[];
+  @Column({ default: true })
+  isActive: boolean;
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @Column({ default: false })
+  isFeatured: boolean; // show on homepage
 
-    @UpdateDateColumn()
-    updatedAt: Date;
+  @ManyToOne(() => Category, (category) => category.products)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
+
+  @Column()
+  categoryId: string;
+
+  @OneToMany(() => Review, (review) => review.product)
+  reviews: Review[];
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.product)
+  cartItems: CartItem[];
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
+  orderItems: OrderItem[];
+
+  @OneToMany(() => Wishlist, (wishlist) => wishlist.product)
+  wishlist: Wishlist[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }
