@@ -8,21 +8,37 @@ import {
     UseGuards,
     Request,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import {ApiCreateResponses,ApiProtectedResponses,ApiAdminResponses,} from '../common/decorators/api-response.decorator';
+import {
+    ApiCreateResponses,
+    ApiProtectedResponses,
+    ApiAdminResponses,
+} from '../common/decorators/api-response.decorator';
 import { OrderStatus } from './order.entity';
-import { IsEnum } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 
 class UpdateOrderStatusDto {
     @ApiProperty({ enum: OrderStatus, example: OrderStatus.CONFIRMED })
     @IsEnum(OrderStatus)
     status: OrderStatus;
+}
+
+class CancelOrderDto {
+    @ApiProperty({ example: 'Changed my mind' })
+    @IsString()
+    @IsOptional()
+    reason?: string;
+}
+
+class UpdateTrackingDto {
+    @ApiProperty({ example: 'TRK-123456789' })
+    @IsString()
+    trackingNumber: string;
 }
 
 @ApiTags('Orders')
@@ -47,7 +63,7 @@ export class OrdersController {
     }
 
     @Get('my/:id')
-    @ApiOperation({ summary: 'Get single order' })
+    @ApiOperation({ summary: 'Get single order details' })
     @ApiProtectedResponses()
     getMyOrder(@Request() req: any, @Param('id') id: string) {
         return this.ordersService.getMyOrder(req.user.id, id);
@@ -56,8 +72,12 @@ export class OrdersController {
     @Patch('my/:id/cancel')
     @ApiOperation({ summary: 'Cancel my order' })
     @ApiProtectedResponses()
-    cancelOrder(@Request() req: any, @Param('id') id: string) {
-        return this.ordersService.cancelOrder(req.user.id, id);
+    cancelOrder(
+        @Request() req: any,
+        @Param('id') id: string,
+        @Body() dto: CancelOrderDto,
+    ) {
+        return this.ordersService.cancelOrder(req.user.id, id, dto.reason);
     }
 
     // Admin routes
@@ -80,5 +100,17 @@ export class OrdersController {
         @Body() dto: UpdateOrderStatusDto,
     ) {
         return this.ordersService.updateOrderStatus(id, dto.status);
+    }
+
+    @Patch(':id/tracking')
+    @ApiOperation({ summary: 'Add tracking number - Admin only' })
+    @ApiAdminResponses()
+    @UseGuards(RolesGuard)
+    @Roles('admin')
+    updateTracking(
+        @Param('id') id: string,
+        @Body() dto: UpdateTrackingDto,
+    ) {
+        return this.ordersService.updateTrackingNumber(id, dto.trackingNumber);
     }
 }

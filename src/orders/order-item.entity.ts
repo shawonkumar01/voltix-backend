@@ -27,9 +27,23 @@ export class OrderItem {
     @Column()
     productId: string;
 
+    // Snapshot of product at time of order
+    @Column()
+    productName: string;
+
+    @Column({ nullable: true })
+    productBrand: string;
+
+    @Column({ nullable: true })
+    productImage: string;
+
     @Column({ default: 1 })
     quantity: number;
 
+    // Price at time of order
     @Column('decimal', { precision: 10, scale: 2 })
     price: number;
+
+    @Column('decimal', { precision: 10, scale: 2 })
+    total: number;
 }

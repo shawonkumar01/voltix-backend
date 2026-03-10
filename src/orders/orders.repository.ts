@@ -43,6 +43,10 @@ export class OrdersRepository {
         });
     }
 
+    async countOrders() {
+        return this.orderRepo.count();
+    }
+
     async createOrder(data: Partial<Order>) {
         const order = this.orderRepo.create(data);
         return this.orderRepo.save(order);
