@@ -20,6 +20,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
+import { Payment } from './payments/payments.entity';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { AdminModule } from './admin/admin.module';
           OrderItem,
           Review,
           Wishlist,
+          Payment,
         ],
         synchronize: true,
       }),
