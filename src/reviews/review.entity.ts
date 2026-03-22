@@ -32,8 +32,17 @@ export class Review {
   @Column({ type: 'int' })
   rating: number;
 
+  @Column({ nullable: true })
+  title: string;
+
   @Column('text')
   comment: string;
+
+  @Column({ default: false })
+  isVerifiedPurchase: boolean;
+
+  @Column({ default: 0 })
+  helpfulCount: number;
 
   @CreateDateColumn()
   createdAt: Date;
