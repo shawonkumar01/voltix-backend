@@ -29,13 +29,13 @@ export class Product {
   price: number;
 
   @Column({ nullable: true, unique: true })
-  sku: string; // e.g VLT-APL-001
+  sku: string;
 
   @Column({ default: 0 })
   stock: number;
 
   @Column({ default: 0 })
-  soldCount: number; // increases on every order
+  soldCount: number;
 
   @Column({ nullable: true })
   brand: string;
@@ -44,16 +44,16 @@ export class Product {
   model: string;
 
   @Column({ nullable: true })
-  warranty: string; // e.g "1 Year Manufacturer Warranty"
+  warranty: string;
 
   @Column({ nullable: true })
-  weight: number; // in grams
+  weight: number;
 
   @Column({ nullable: true })
-  discount: number; // percentage e.g 10 for 10% off
+  discount: number;
 
   @Column('decimal', { precision: 10, scale: 2, nullable: true })
-  discountedPrice: number; // final price after discount
+  discountedPrice: number | null;
 
   @Column('simple-array', { nullable: true })
   images: string[];
@@ -68,7 +68,11 @@ export class Product {
   isActive: boolean;
 
   @Column({ default: false })
-  isFeatured: boolean; // show on homepage
+  isFeatured: boolean;
+
+  // JSONB for flexible electronics specs
+  @Column({ type: 'jsonb', nullable: true })
+  specifications: Record<string, string>;
 
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'categoryId' })

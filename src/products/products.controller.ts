@@ -14,6 +14,7 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductDto } from './dto/filter-product.dto';
+import { AdvancedSearchDto } from './dto/advanced-search.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -26,7 +27,7 @@ import {
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   // Public routes
   @Get()
@@ -34,6 +35,13 @@ export class ProductsController {
   @ApiProtectedResponses()
   findAll(@Query() filters: FilterProductDto) {
     return this.productsService.findAll(filters);
+  }
+
+  @Get('search/advanced')
+  @ApiOperation({ summary: 'Advanced search with specs filter & sorting' })
+  @ApiProtectedResponses()
+  advancedSearch(@Query() filters: AdvancedSearchDto) {
+    return this.productsService.advancedSearch(filters);
   }
 
   @Get(':id')
@@ -73,4 +81,5 @@ export class ProductsController {
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
   }
+
 }

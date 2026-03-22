@@ -8,10 +8,11 @@ import { ProductsRepository } from './products.repository';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductDto } from './dto/filter-product.dto';
+import { AdvancedSearchDto } from './dto/advanced-search.dto';
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly productsRepository: ProductsRepository) {}
+  constructor(private readonly productsRepository: ProductsRepository) { }
 
   async create(dto: CreateProductDto) {
     const existing = await this.productsRepository.findByName(dto.name);
@@ -19,7 +20,6 @@ export class ProductsService {
       throw new ConflictException(`Product "${dto.name}" already exists`);
     }
 
-    // Auto calculate discounted price
     let discountedPrice: number | undefined = undefined;
     if (dto.discount && dto.discount > 0) {
       discountedPrice = parseFloat(
@@ -28,36 +28,6 @@ export class ProductsService {
     }
 
     return this.productsRepository.create({ ...dto, discountedPrice });
-  }
-
-  async update(id: string, dto: UpdateProductDto) {
-    if (Object.keys(dto).length === 0) {
-      throw new BadRequestException('No fields provided to update');
-    }
-
-    const product = await this.productsRepository.findById(id);
-    if (!product) {
-      throw new NotFoundException(`Product with id "${id}" not found`);
-    }
-
-    if (dto.name && dto.name !== product.name) {
-      const nameExists = await this.productsRepository.findByName(dto.name);
-      if (nameExists) {
-        throw new ConflictException(`Product "${dto.name}" already exists`);
-      }
-    }
-
-    // Recalculate discounted price if price or discount changes
-    const price = dto.price ?? product.price;
-    const discount = dto.discount ?? product.discount;
-    let discountedPrice: number | undefined = undefined;
-    if (discount && discount > 0) {
-      discountedPrice = parseFloat(
-        (price - (price * discount) / 100).toFixed(2),
-      );
-    }
-
-    return this.productsRepository.update(id, { ...dto, discountedPrice });
   }
 
   async findAll(filters: FilterProductDto) {
@@ -82,6 +52,43 @@ export class ProductsService {
     return product;
   }
 
+  async findFeatured() {
+    const products = await this.productsRepository.findFeatured();
+    if (!products.length) {
+      return { message: 'No featured products found', data: [] };
+    }
+    return products;
+  }
+
+  async update(id: string, dto: UpdateProductDto) {
+    if (Object.keys(dto).length === 0) {
+      throw new BadRequestException('No fields provided to update');
+    }
+
+    const product = await this.productsRepository.findById(id);
+    if (!product) {
+      throw new NotFoundException(`Product with id "${id}" not found`);
+    }
+
+    if (dto.name && dto.name !== product.name) {
+      const nameExists = await this.productsRepository.findByName(dto.name);
+      if (nameExists) {
+        throw new ConflictException(`Product "${dto.name}" already exists`);
+      }
+    }
+
+    const price = dto.price ?? product.price;
+    const discount = dto.discount ?? product.discount;
+    let discountedPrice: number | undefined = undefined;
+    if (discount && discount > 0) {
+      discountedPrice = parseFloat(
+        (price - (price * discount) / 100).toFixed(2),
+      );
+    }
+
+    return this.productsRepository.update(id, { ...dto, discountedPrice });
+  }
+
   async remove(id: string) {
     const product = await this.productsRepository.findById(id);
     if (!product) {
@@ -89,5 +96,19 @@ export class ProductsService {
     }
     await this.productsRepository.remove(product);
     return { message: `Product "${product.name}" deleted successfully` };
+  }
+
+  async advancedSearch(filters: AdvancedSearchDto) {
+    const { data, total, page, limit } =
+      await this.productsRepository.advancedSearch(filters);
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }

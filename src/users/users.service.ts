@@ -8,7 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) { }
+  constructor(private readonly usersRepository: UsersRepository) {}
 
   async getMe(id: string) {
     const user = await this.usersRepository.findById(id);

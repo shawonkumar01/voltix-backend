@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsArray,
   IsBoolean,
+  IsObject,
   Min,
   Max,
 } from 'class-validator';
@@ -67,4 +68,11 @@ export class UpdateProductDto {
   @IsString()
   @IsOptional()
   categoryId?: string;
+
+  @ApiPropertyOptional({
+    example: { RAM: '16GB', Storage: '512GB' },
+  })
+  @IsObject()
+  @IsOptional()
+  specifications?: Record<string, string>;
 }

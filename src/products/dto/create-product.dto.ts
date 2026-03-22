@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsArray,
   IsBoolean,
+  IsObject,
   Min,
   Max,
 } from 'class-validator';
@@ -79,6 +80,20 @@ export class CreateProductDto {
   @IsBoolean()
   @IsOptional()
   isFeatured?: boolean;
+
+  @ApiPropertyOptional({
+    example: {
+      RAM: '8GB',
+      Storage: '256GB',
+      Processor: 'A17 Pro',
+      OS: 'iOS 17',
+      Display: '6.1 inch',
+      Battery: '3274 mAh',
+    },
+  })
+  @IsObject()
+  @IsOptional()
+  specifications?: Record<string, string>;
 
   @ApiProperty({ example: 'category-uuid-here' })
   @IsString()
