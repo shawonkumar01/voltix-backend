@@ -1,4 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,8 +9,17 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   try {
-    const app = await NestFactory.create(AppModule,{
-       rawBody: true,
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+      rawBody: true,
+    });
+
+    const uploadsPath = join(process.cwd(), 'uploads');
+    if (!existsSync(uploadsPath)) {
+      mkdirSync(uploadsPath, { recursive: true });
+    }
+
+    app.useStaticAssets(uploadsPath, {
+      prefix: '/uploads/',
     });
 
     app.setGlobalPrefix('api');
@@ -16,13 +28,16 @@ async function bootstrap() {
       new ValidationPipe({
         whitelist: true,
         transform: true,
-       
+
       }),
     );
 
     app.useGlobalFilters(new HttpExceptionFilter());
 
-    app.enableCors({ origin: 'http://localhost:3000' });
+    app.enableCors({
+      origin: ['http://localhost:3000', 'http://localhost:3001'],
+      credentials: true,
+    });
 
     const config = new DocumentBuilder()
       .setTitle('Voltix API ⚡')

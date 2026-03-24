@@ -11,6 +11,7 @@ import { Order } from './orders/order.entity';
 import { OrderItem } from './orders/order-item.entity';
 import { Review } from './reviews/review.entity';
 import { Wishlist } from './wishlist/wishlist.entity';
+import { Upload } from './upload/upload.entity';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
@@ -20,6 +21,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { WishlistModule } from './wishlist/wishlist.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
+import { UploadModule } from './upload/upload.module';
 import { Payment } from './payments/payments.entity';
 
 @Module({
@@ -45,6 +47,7 @@ import { Payment } from './payments/payments.entity';
           Review,
           Wishlist,
           Payment,
+          Upload,
         ],
         synchronize: true,
       }),
@@ -60,6 +63,7 @@ import { Payment } from './payments/payments.entity';
     WishlistModule,
     PaymentsModule,
     AdminModule,
+    UploadModule,
   ],
 })
 export class AppModule {}
