@@ -7,7 +7,9 @@ import {
   Param,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiTags,
   ApiOperation,
@@ -84,6 +86,21 @@ export class OrdersController {
     @Body() dto: CancelOrderDto,
   ) {
     return this.ordersService.cancelOrder(req.user.id, id, dto.reason);
+  }
+
+  @Get('my/:id/invoice')
+  @ApiOperation({ summary: 'Download order invoice PDF' })
+  @ApiProtectedResponses()
+  async downloadInvoice(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.ordersService.generateInvoice(req.user.id, id);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="invoice-${id}.pdf"`);
+    res.send(pdfBuffer);
   }
 
   // Admin routes

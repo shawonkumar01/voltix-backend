@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as PDFDocument from 'pdfkit';
 import { OrdersRepository } from './orders.repository';
 import { CartRepository } from '../cart/cart.repository';
 import { Product } from '../products/product.entity';
@@ -195,5 +196,109 @@ export class OrdersService {
       throw new NotFoundException(`Order with id "${orderId}" not found`);
     }
     return this.ordersRepository.updateOrder(orderId, { trackingNumber });
+  }
+
+  async generateInvoice(userId: string, orderId: string): Promise<Buffer> {
+    // Find order with items
+    const order = await this.ordersRepository.findByIdAndUserId(orderId, userId);
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Create PDF document
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks: Buffer[] = [];
+
+    // Collect PDF data
+    doc.on('data', (chunk) => chunks.push(chunk));
+
+    const pdfPromise = new Promise<Buffer>((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
+
+    // Header - Logo and Title
+    doc
+      .fontSize(30)
+      .fillColor('#f59e0b')
+      .text('VOLTIX', 50, 50)
+      .fontSize(20)
+      .fillColor('#333')
+      .text('INVOICE', 400, 50, { align: 'right' });
+
+    // Invoice details
+    doc
+      .fontSize(10)
+      .fillColor('#666')
+      .text(`Invoice #: ${order.orderNumber}`, 400, 100, { align: 'right' })
+      .text(`Date: ${new Date(order.createdAt).toLocaleDateString()}`, 400, 115, { align: 'right' })
+      .text(`Status: ${order.status.toUpperCase()}`, 400, 130, { align: 'right' });
+
+    // Customer info
+    doc
+      .fontSize(12)
+      .fillColor('#333')
+      .text('Bill To:', 50, 180)
+      .fontSize(10)
+      .fillColor('#666')
+      .text(`${order.shippingFirstName} ${order.shippingLastName}`, 50, 200)
+      .text(order.shippingAddress, 50, 215)
+      .text(`${order.shippingCity}, ${order.shippingState} ${order.shippingZip}`, 50, 230)
+      .text(order.shippingCountry, 50, 245);
+
+    // Table header
+    const tableTop = 300;
+    doc
+      .fontSize(10)
+      .fillColor('#fff')
+      .rect(50, tableTop, 500, 20)
+      .fill('#f59e0b')
+      .text('Item', 60, tableTop + 5)
+      .text('Qty', 300, tableTop + 5)
+      .text('Price', 370, tableTop + 5)
+      .text('Total', 450, tableTop + 5);
+
+    // Table rows
+    let y = tableTop + 30;
+    order.items.forEach((item, index) => {
+      const bgColor = index % 2 === 0 ? '#f9fafb' : '#fff';
+
+      doc
+        .fillColor(bgColor)
+        .rect(50, y - 5, 500, 25)
+        .fill()
+        .fillColor('#333')
+        .fontSize(9)
+        .text(item.productName, 60, y)
+        .text(item.quantity.toString(), 300, y)
+        .text(`$${Number(item.price).toFixed(2)}`, 370, y)
+        .text(`$${Number(item.total).toFixed(2)}`, 450, y);
+
+      y += 25;
+    });
+
+    // Totals
+    const totalsY = y + 20;
+    doc
+      .fontSize(10)
+      .fillColor('#666')
+      .text('Subtotal:', 350, totalsY)
+      .text(`$${Number(order.subtotal).toFixed(2)}`, 450, totalsY)
+      .text('Tax:', 350, totalsY + 15)
+      .text(`$${Number(order.tax).toFixed(2)}`, 450, totalsY + 15)
+      .text('Shipping:', 350, totalsY + 30)
+      .text('Free', 450, totalsY + 30)
+      .fontSize(12)
+      .fillColor('#f59e0b')
+      .text('Total:', 350, totalsY + 50)
+      .text(`$${Number(order.totalAmount).toFixed(2)}`, 450, totalsY + 50);
+
+    // Footer
+    doc
+      .fontSize(10)
+      .fillColor('#999')
+      .text('Thank you for shopping with Voltix!', 50, 750, { align: 'center' });
+
+    doc.end();
+    return pdfPromise;
   }
 }

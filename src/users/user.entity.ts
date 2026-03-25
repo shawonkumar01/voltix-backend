@@ -67,6 +67,18 @@ export class User {
   @Column({ default: false })
   isEmailVerified: boolean;
 
+  @Column({ nullable: true })
+  resetToken: string;
+
+  @Column({ nullable: true })
+  resetTokenExpiry: Date;
+
+  @Column({ nullable: true })
+  emailVerificationToken: string;
+
+  @Column({ nullable: true })
+  emailVerificationExpiry: Date;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 

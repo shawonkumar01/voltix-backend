@@ -5,21 +5,18 @@ import {
     Delete,
     Body,
     Param,
-    UseGuards,
     Request,
+    UnauthorizedException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { WishlistService } from './wishlist.service';
 import { AddWishlistDto } from './dto/add-wishlist.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import {
     ApiCreateResponses,
     ApiProtectedResponses,
 } from '../common/decorators/api-response.decorator';
 
 @ApiTags('Wishlist')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('wishlist')
 export class WishlistController {
     constructor(private readonly wishlistService: WishlistService) { }
@@ -27,45 +24,63 @@ export class WishlistController {
     @Get()
     @ApiOperation({ summary: 'Get my wishlist' })
     @ApiProtectedResponses()
-    getWishlist(@Request() req: any) {
-        return this.wishlistService.getWishlist(req.user.id);
+    getWishlist(@Request() req) {
+        if (!req.session.user) {
+            throw new UnauthorizedException('Please login to access wishlist');
+        }
+        return this.wishlistService.getWishlist(req.session.user.id);
     }
 
     @Post()
     @ApiOperation({ summary: 'Add product to wishlist' })
     @ApiCreateResponses()
-    addToWishlist(@Request() req: any, @Body() dto: AddWishlistDto) {
-        return this.wishlistService.addToWishlist(req.user.id, dto);
+    addToWishlist(@Request() req, @Body() dto: AddWishlistDto) {
+        if (!req.session.user) {
+            throw new UnauthorizedException('Please login to add to wishlist');
+        }
+        return this.wishlistService.addToWishlist(req.session.user.id, dto);
     }
 
     @Delete('clear')
     @ApiOperation({ summary: 'Clear entire wishlist' })
     @ApiProtectedResponses()
-    clearWishlist(@Request() req: any) {
-        return this.wishlistService.clearWishlist(req.user.id);
+    clearWishlist(@Request() req) {
+        if (!req.session.user) {
+            throw new UnauthorizedException('Please login to clear wishlist');
+        }
+        return this.wishlistService.clearWishlist(req.session.user.id);
     }
 
     @Get('check/:productId')
     @ApiOperation({ summary: 'Check if product is in wishlist' })
     @ApiProtectedResponses()
-    isInWishlist(@Request() req: any, @Param('productId') productId: string) {
-        return this.wishlistService.isInWishlist(req.user.id, productId);
+    isInWishlist(@Request() req, @Param('productId') productId: string) {
+        if (!req.session.user) {
+            throw new UnauthorizedException('Please login to check wishlist');
+        }
+        return this.wishlistService.isInWishlist(req.session.user.id, productId);
     }
 
     @Delete('product/:productId')
     @ApiOperation({ summary: 'Remove product from wishlist by productId' })
     @ApiProtectedResponses()
     removeByProductId(
-        @Request() req: any,
+        @Request() req,
         @Param('productId') productId: string,
     ) {
-        return this.wishlistService.removeByProductId(req.user.id, productId);
+        if (!req.session.user) {
+            throw new UnauthorizedException('Please login to remove from wishlist');
+        }
+        return this.wishlistService.removeByProductId(req.session.user.id, productId);
     }
 
     @Delete(':id')
     @ApiOperation({ summary: 'Remove item from wishlist by wishlist id' })
     @ApiProtectedResponses()
-    removeFromWishlist(@Request() req: any, @Param('id') id: string) {
-        return this.wishlistService.removeFromWishlist(req.user.id, id);
+    removeFromWishlist(@Request() req, @Param('id') id: string) {
+        if (!req.session.user) {
+            throw new UnauthorizedException('Please login to remove from wishlist');
+        }
+        return this.wishlistService.removeFromWishlist(req.session.user.id, id);
     }
 }

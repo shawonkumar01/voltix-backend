@@ -4,19 +4,16 @@ import {
   Get,
   Body,
   Param,
-  UseGuards,
   Request,
   Headers,
   RawBodyRequest,
   Req,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
-import { Roles } from '../common/decorators/roles.decorator';
 import {
   ApiCreateResponses,
   ApiProtectedResponses,
@@ -41,42 +38,45 @@ export class PaymentsController {
   }
 
   @Post('create-intent')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Create payment intent for an order' })
   @ApiCreateResponses()
   createPaymentIntent(
-    @Request() req: any,
+    @Request() req,
     @Body() dto: CreatePaymentDto,
   ) {
-    return this.paymentsService.createPaymentIntent(req.user.id, dto);
+    if (!req.session.user) {
+      throw new UnauthorizedException('Please login to create payment intent');
+    }
+    return this.paymentsService.createPaymentIntent(req.session.user.id, dto);
   }
 
   @Post('confirm/:orderId')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Confirm payment after Stripe redirect' })
   @ApiProtectedResponses()
-  confirmPayment(@Request() req: any, @Param('orderId') orderId: string) {
-    return this.paymentsService.confirmPayment(req.user.id, orderId);
+  confirmPayment(@Request() req, @Param('orderId') orderId: string) {
+    if (!req.session.user) {
+      throw new UnauthorizedException('Please login to confirm payment');
+    }
+    return this.paymentsService.confirmPayment(req.session.user.id, orderId);
   }
 
   @Get('status/:orderId')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get payment status for an order' })
   @ApiProtectedResponses()
-  getPaymentStatus(@Request() req: any, @Param('orderId') orderId: string) {
-    return this.paymentsService.getPaymentStatus(req.user.id, orderId);
+  getPaymentStatus(@Request() req, @Param('orderId') orderId: string) {
+    if (!req.session.user) {
+      throw new UnauthorizedException('Please login to check payment status');
+    }
+    return this.paymentsService.getPaymentStatus(req.session.user.id, orderId);
   }
 
   @Post('refund/:orderId')
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
   @ApiOperation({ summary: 'Refund payment - Admin only' })
   @ApiAdminResponses()
-  refundPayment(@Request() req: any, @Param('orderId') orderId: string) {
-    return this.paymentsService.refundPayment(req.user.id, orderId);
+  refundPayment(@Request() req, @Param('orderId') orderId: string) {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+      throw new UnauthorizedException('Admin access required');
+    }
+    return this.paymentsService.refundPayment(req.session.user.id, orderId);
   }
 }

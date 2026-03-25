@@ -18,7 +18,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, session: any) {
     if (!dto.email || !dto.password) {
       throw new BadRequestException('Email and password are required');
     }
@@ -34,10 +34,19 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    // Create session
+    session.user = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    };
+
     return this.generateToken(user);
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, session: any) {
     if (!dto.email || !dto.password) {
       throw new BadRequestException('Email and password are required');
     }
@@ -56,7 +65,65 @@ export class AuthService {
       throw new UnauthorizedException('Incorrect password');
     }
 
+    // Create session
+    session.user = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    };
+
     return this.generateToken(user);
+  }
+
+  async validateGoogleUser(googleUser: any, session: any) {
+    const { email, firstName, lastName, picture } = googleUser;
+    
+    let user = await this.usersRepository.findByEmail(email);
+    
+    if (!user) {
+      // Create new user if doesn't exist
+      // Generate a random password for OAuth users (they won't use it)
+      const randomPassword = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      
+      user = await this.usersRepository.create({
+        email,
+        firstName,
+        lastName,
+        password: hashedPassword,
+        isActive: true,
+        role: 'user' as any, // Cast to any to avoid type issues
+        avatar: picture,
+      });
+    } else {
+      // Update existing user with Google info
+      user = await this.usersRepository.update(user.id, {
+        avatar: picture,
+        isActive: true,
+      });
+    }
+
+    if (!user) {
+      throw new UnauthorizedException('Failed to create or update user');
+    }
+
+    // Create session
+    session.user = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    };
+
+    return this.generateToken(user);
+  }
+
+  async logout(session: any) {
+    session.destroy();
+    return { message: 'Logout successful' };
   }
 
   private generateToken(user: User) {
