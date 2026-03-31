@@ -70,9 +70,93 @@ export class Product {
   @Column({ default: false })
   isFeatured: boolean;
 
+  @Column({ default: false })
+  isNew: boolean;
+
+  @Column({ default: false })
+  isOnSale: boolean;
+
+  @Column({ nullable: true })
+  launchDate: Date;
+
+  @Column({ nullable: true })
+  releaseDate: Date;
+
+  @Column({ nullable: true })
+  color: string;
+
+  @Column({ nullable: true })
+  storageCapacity: string;
+
+  @Column({ nullable: true })
+  displaySize: string;
+
+  @Column({ nullable: true })
+  processor: string;
+
+  @Column({ nullable: true })
+  ram: string;
+
+  @Column({ nullable: true })
+  operatingSystem: string;
+
+  @Column({ nullable: true })
+  connectivity: string;
+
+  @Column({ nullable: true })
+  batteryLife: string;
+
+  @Column({ nullable: true })
+  camera: string;
+
+  @Column({ nullable: true })
+  videoResolution: string;
+
+  @Column({ nullable: true })
+  networkType: string;
+
+  @Column({ nullable: true })
+  frequency: string;
+
+  @Column({ nullable: true })
+  power: string;
+
+  @Column({ nullable: true })
+  dimensions: string;
+
+  @Column({ nullable: true })
+  material: string;
+
+  @Column({ nullable: true })
+  condition: 'new' | 'refurbished' | 'used';
+
+  @Column('text', { nullable: true })
+  tags: string;
+
+  @Column({ default: 'electronics' })
+  productType: string;
+
+  @Column({ default: 0 })
+  viewCount: number;
+
+  @Column({ default: 0 })
+  wishlistCount: number;
+
+  @Column({ nullable: true })
+  seoTitle: string;
+
+  @Column({ nullable: true })
+  seoDescription: string;
+
+  @Column('text', { nullable: true })
+  seoKeywords: string;
+
   // JSONB for flexible electronics specs
   @Column({ type: 'jsonb', nullable: true })
   specifications: Record<string, string>;
+
+  @Column({ type: 'jsonb', nullable: true })
+  additionalInfo: Record<string, any>;
 
   @ManyToOne(() => Category, (category) => category.products)
   @JoinColumn({ name: 'categoryId' })

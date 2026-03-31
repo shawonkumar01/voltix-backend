@@ -18,7 +18,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto, session: any) {
+  async register(dto: RegisterDto) {
     if (!dto.email || !dto.password) {
       throw new BadRequestException('Email and password are required');
     }
@@ -34,19 +34,10 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    // Create session
-    session.user = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-    };
-
     return this.generateToken(user);
   }
 
-  async login(dto: LoginDto, session: any) {
+  async login(dto: LoginDto) {
     if (!dto.email || !dto.password) {
       throw new BadRequestException('Email and password are required');
     }
@@ -65,19 +56,10 @@ export class AuthService {
       throw new UnauthorizedException('Incorrect password');
     }
 
-    // Create session
-    session.user = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-    };
-
     return this.generateToken(user);
   }
 
-  async validateGoogleUser(googleUser: any, session: any) {
+  async validateGoogleUser(googleUser: any) {
     const { email, firstName, lastName, picture } = googleUser;
     
     let user = await this.usersRepository.findByEmail(email);
@@ -109,20 +91,10 @@ export class AuthService {
       throw new UnauthorizedException('Failed to create or update user');
     }
 
-    // Create session
-    session.user = {
-      id: user.id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-    };
-
     return this.generateToken(user);
   }
 
-  async logout(session: any) {
-    session.destroy();
+  async logout() {
     return { message: 'Logout successful' };
   }
 

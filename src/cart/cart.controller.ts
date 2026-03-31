@@ -8,6 +8,7 @@ import {
   Param,
   Request,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CartService } from './cart.service';
@@ -17,9 +18,11 @@ import {
   ApiProtectedResponses,
   ApiCreateResponses,
 } from '../common/decorators/api-response.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @ApiTags('Cart')
 @Controller('cart')
+@UseGuards(JwtAuthGuard)
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
@@ -27,20 +30,22 @@ export class CartController {
   @ApiOperation({ summary: 'Get my cart' })
   @ApiProtectedResponses()
   getCart(@Request() req) {
-    if (!req.session.user) {
+    const user = req.user;
+    if (!user || !user.id) {
       throw new UnauthorizedException('Please login to access cart');
     }
-    return this.cartService.getCart(req.session.user.id);
+    return this.cartService.getCart(user.id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Add item to cart' })
   @ApiCreateResponses()
   addToCart(@Request() req, @Body() dto: AddToCartDto) {
-    if (!req.session.user) {
+    const user = req.user;
+    if (!user || !user.id) {
       throw new UnauthorizedException('Please login to add to cart');
     }
-    return this.cartService.addToCart(req.session.user.id, dto);
+    return this.cartService.addToCart(user.id, dto);
   }
 
   @Patch(':itemId')
@@ -51,20 +56,22 @@ export class CartController {
     @Param('itemId') itemId: string,
     @Body() dto: UpdateCartDto,
   ) {
-    if (!req.session.user) {
+    const user = req.user;
+    if (!user || !user.id) {
       throw new UnauthorizedException('Please login to update cart');
     }
-    return this.cartService.updateCartItem(req.session.user.id, itemId, dto);
+    return this.cartService.updateCartItem(user.id, itemId, dto);
   }
 
   @Delete('clear')
   @ApiOperation({ summary: 'Clear entire cart' })
   @ApiProtectedResponses()
   clearCart(@Request() req) {
-    if (!req.session.user) {
+    const user = req.user;
+    if (!user || !user.id) {
       throw new UnauthorizedException('Please login to clear cart');
     }
-    return this.cartService.clearCart(req.session.user.id);
+    return this.cartService.clearCart(user.id);
   }
 
   @Delete(':itemId')
@@ -74,9 +81,10 @@ export class CartController {
     @Request() req,
     @Param('itemId') itemId: string,
   ) {
-    if (!req.session.user) {
+    const user = req.user;
+    if (!user || !user.id) {
       throw new UnauthorizedException('Please login to remove from cart');
     }
-    return this.cartService.removeCartItem(req.session.user.id, itemId);
+    return this.cartService.removeCartItem(user.id, itemId);
   }
 }

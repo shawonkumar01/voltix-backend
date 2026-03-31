@@ -6,7 +6,6 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import * as session from 'express-session';
 
 async function bootstrap() {
   try {
@@ -23,21 +22,6 @@ async function bootstrap() {
       prefix: '/uploads/',
     });
 
-    // Add session middleware
-    app.use(
-      session({
-        secret: process.env.SESSION_SECRET || 'your-super-secret-key-change-this-in-production',
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-          secure: false, // Set to true in production with HTTPS
-          httpOnly: true,
-          sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        },
-      }),
-    );
-
     app.setGlobalPrefix('api');
 
     app.useGlobalPipes(
@@ -52,7 +36,7 @@ async function bootstrap() {
 
     app.enableCors({
       origin: ['http://localhost:3000', 'http://localhost:3001'],
-      credentials: true,
+      credentials: true, // Allow credentials for JWT
     });
 
     const config = new DocumentBuilder()

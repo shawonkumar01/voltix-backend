@@ -22,6 +22,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AdminModule } from './admin/admin.module';
 import { UploadModule } from './upload/upload.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { Payment } from './payments/payments.entity';
 
 @Module({
@@ -64,6 +65,7 @@ import { Payment } from './payments/payments.entity';
     PaymentsModule,
     AdminModule,
     UploadModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}

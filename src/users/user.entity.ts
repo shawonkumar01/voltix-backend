@@ -79,6 +79,12 @@ export class User {
   @Column({ nullable: true })
   emailVerificationExpiry: Date;
 
+  @Column({ nullable: true })
+  lastLoginAt: Date;
+
+  @Column({ nullable: true })
+  location: string;
+
   @OneToMany(() => Order, (order) => order.user)
   orders: Order[];
 

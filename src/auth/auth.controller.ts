@@ -8,6 +8,7 @@ import {
   ApiAuthResponses,
 } from '../common/decorators/api-response.decorator';
 import { GoogleGuard } from './guards/google.guard';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -17,16 +18,16 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiCreateResponses()
-  async register(@Body() dto: RegisterDto, @Req() req) {
-    return this.authService.register(dto, req.session);
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiAuthResponses()
-  async login(@Body() dto: LoginDto, @Req() req) {
-    return this.authService.login(dto, req.session);
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
   @Get('google')
@@ -43,7 +44,7 @@ export class AuthController {
     try {
       console.log('Google OAuth Callback - User:', req.user);
       
-      const result = await this.authService.validateGoogleUser(req.user, req.session);
+      const result = await this.authService.validateGoogleUser(req.user);
       
       console.log('Google OAuth Result:', result);
       
@@ -67,19 +68,17 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Logout user and destroy session' })
-  async logout(@Req() req) {
-    return this.authService.logout(req.session);
+  @ApiOperation({ summary: 'Logout user' })
+  async logout() {
+    return this.authService.logout();
   }
 
   @Get('profile')
-  @ApiOperation({ summary: 'Get current user profile from session' })
+  @ApiOperation({ summary: 'Get current user profile from JWT token' })
+  @UseGuards(JwtAuthGuard)
   getProfile(@Req() req) {
-    if (!req.session.user) {
-      return { message: 'Not authenticated' };
-    }
     return {
-      user: req.session.user,
+      user: req.user,
       isAuthenticated: true,
     };
   }
