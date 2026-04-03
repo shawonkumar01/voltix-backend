@@ -9,6 +9,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { FilterProductDto } from './dto/filter-product.dto';
 import { AdvancedSearchDto } from './dto/advanced-search.dto';
+import { ProductResponseDto } from './dto/product-response.dto';
 
 @Injectable()
 export class ProductsService {
@@ -44,12 +45,22 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<ProductResponseDto> {
     const product = await this.productsRepository.findById(id);
     if (!product) {
       throw new NotFoundException(`Product with id "${id}" not found`);
     }
-    return product;
+    
+    // Ensure numeric fields are numbers
+    return {
+      ...product,
+      price: Number(product.price),
+      discountedPrice: product.discountedPrice ? Number(product.discountedPrice) : undefined,
+      stock: Number(product.stock),
+      rating: product.rating ? Number(product.rating) : undefined,
+      isActive: Boolean(product.isActive),
+      isFeatured: Boolean(product.isFeatured),
+    };
   }
 
   async findFeatured() {
