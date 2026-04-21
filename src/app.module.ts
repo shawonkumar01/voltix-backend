@@ -1,11 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/user.entity';
 import { Category } from './categories/category.entity';
 import { Product } from './products/product.entity';
-import { Cart } from './cart/cart.entity';
 import { CartItem } from './cart/cart-item.entity';
 import { Order } from './orders/order.entity';
 import { OrderItem } from './orders/order-item.entity';
@@ -24,6 +23,11 @@ import { AdminModule } from './admin/admin.module';
 import { UploadModule } from './upload/upload.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { Payment } from './payments/payments.entity';
+import { DebugModule } from './debug/debug.module';
+import { AuthTestModule } from './auth-test/auth-test.module';
+import { AuthLoggerMiddleware } from './common/middleware/auth-logger.middleware';
+import { JwtDebugModule } from './jwt-debug/jwt-debug.module';
+import { TokenTestModule } from './token-test/token-test.module';
 
 @Module({
   imports: [
@@ -41,7 +45,6 @@ import { Payment } from './payments/payments.entity';
           User,
           Category,
           Product,
-          Cart,
           CartItem,
           Order,
           OrderItem,
@@ -66,6 +69,16 @@ import { Payment } from './payments/payments.entity';
     AdminModule,
     UploadModule,
     AnalyticsModule,
+    DebugModule,
+    AuthTestModule,
+    JwtDebugModule,
+    TokenTestModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuthLoggerMiddleware)
+      .forRoutes('cart');
+  }
+}

@@ -7,8 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as PDFDocument from 'pdfkit';
 import { OrdersRepository } from './orders.repository';
-import { CartRepository } from '../cart/cart.repository';
 import { Product } from '../products/product.entity';
+import { CartItem } from '../cart/cart-item.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { OrderStatus, PaymentStatus } from './order.entity';
 
@@ -16,10 +16,12 @@ import { OrderStatus, PaymentStatus } from './order.entity';
 export class OrdersService {
   constructor(
     private readonly ordersRepository: OrdersRepository,
-    private readonly cartRepository: CartRepository,
 
     @InjectRepository(Product)
     private readonly productRepo: Repository<Product>,
+    
+    @InjectRepository(CartItem)
+    private readonly cartItemRepo: Repository<CartItem>,
   ) {}
 
   // Generate readable order number VLT-20260309-0001
@@ -32,16 +34,20 @@ export class OrdersService {
   }
 
   async createOrder(userId: string, dto: CreateOrderDto) {
-    // Get cart
-    const cart = await this.cartRepository.findCartByUserId(userId);
-    if (!cart || cart.items.length === 0) {
+    // Get cart items
+    const cartItems = await this.cartItemRepo.find({
+      where: { userId },
+      relations: ['product'],
+    });
+    
+    if (!cartItems || cartItems.length === 0) {
       throw new BadRequestException(
         'Your cart is empty. Add items before placing an order',
       );
     }
 
     // Validate all items
-    for (const item of cart.items) {
+    for (const item of cartItems) {
       const product = await this.productRepo.findOne({
         where: { id: item.productId },
       });
@@ -63,7 +69,7 @@ export class OrdersService {
     }
 
     // Calculate pricing
-    const subtotal = cart.items.reduce((sum, item) => {
+    const subtotal = cartItems.reduce((sum, item) => {
       return sum + Number(item.product.price) * item.quantity;
     }, 0);
 
@@ -94,7 +100,7 @@ export class OrdersService {
     });
 
     // Create order items with product snapshot
-    for (const item of cart.items) {
+    for (const item of cartItems) {
       await this.ordersRepository.createOrderItem({
         orderId: order.id,
         productId: item.productId,
@@ -114,8 +120,8 @@ export class OrdersService {
       );
     }
 
-    // Clear cart
-    await this.cartRepository.clearCart(cart.id);
+    // Clear cart items
+    await this.cartItemRepo.delete({ userId });
 
     return this.ordersRepository.findById(order.id);
   }

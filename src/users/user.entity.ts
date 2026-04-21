@@ -9,7 +9,7 @@ import {
 import { Order } from '../orders/order.entity';
 import { Review } from '../reviews/review.entity';
 import { Wishlist } from '../wishlist/wishlist.entity';
-import { Cart } from '../cart/cart.entity';
+import { CartItem } from '../cart/cart-item.entity';
 
 export enum UserRole {
   ADMIN = 'admin',
@@ -94,8 +94,8 @@ export class User {
   @OneToMany(() => Wishlist, (wishlist) => wishlist.user)
   wishlist: Wishlist[];
 
-  @OneToMany(() => Cart, (cart) => cart.user)
-  cart: Cart[];
+  @OneToMany(() => CartItem, (cartItem) => cartItem.user)
+  cartItems: CartItem[];
 
   @CreateDateColumn()
   createdAt: Date;
