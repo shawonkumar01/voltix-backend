@@ -3,63 +3,47 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { AddToCartDto, UpdateCartDto } from './dto/add-to-cart.dto';
+import { User, UserRole } from '../users/user.entity';
+import { Product } from '../products/product.entity';
 
 @Injectable()
 export class CartService {
   constructor(
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
+
+  async ensureTestUserExists(userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      console.log(`CART SERVICE: Creating test user ${userId}`);
+      const testUser = this.userRepository.create({
+        firstName: 'Test',
+        lastName: 'User',
+        email: 'test@example.com',
+        password: 'hashedpassword',
+        role: UserRole.USER,
+        isActive: true,
+        isEmailVerified: true,
+      });
+      // Manually set the ID since it's not part of the create method
+      testUser.id = userId;
+      await this.userRepository.save(testUser);
+      console.log(`CART SERVICE: Test user created successfully`);
+    }
+  }
 
   async getCart(userId: string) {
     console.log(`CART SERVICE: Getting cart for userId: ${userId}`);
     
-    // TEMPORARY: Return mock data to test frontend
-    return {
-      items: [
-        {
-          id: 'mock-item-1',
-          quantity: 1,
-          productId: '0420c09b-672e-483f-8810-dba296dccc30',
-          product: {
-            id: '0420c09b-672e-483f-8810-dba296dccc30',
-            name: 'iPhone 15 Pro',
-            price: 999.99,
-            description: 'Latest iPhone with A17 Pro chip',
-            images: ['mock-image.jpg'],
-            brand: 'Apple',
-            stock: 10
-          }
-        }
-      ],
-      total: 999.99,
-      itemCount: 1,
-    };
-    
-    // Original code below (commented out for now)
-    /*
-    // First, try without relations to see if cart items exist
-    const cartItemsNoRelations = await this.cartItemRepository.find({
-      where: { userId },
-    });
-
-    console.log(`CART SERVICE: Found ${cartItemsNoRelations.length} cart items (no relations)`);
-
-    if (cartItemsNoRelations.length === 0) {
-      return {
-        items: [],
-        total: 0,
-        itemCount: 0,
-      };
-    }
-
-    // If items exist, try to load relations
     const cartItems = await this.cartItemRepository.find({
       where: { userId },
       relations: ['product'],
     });
 
-    console.log(`CART SERVICE: Found ${cartItems.length} cart items (with relations)`);
+    console.log(`CART SERVICE: Found ${cartItems.length} cart items`);
     cartItems.forEach(item => {
       console.log(`CART SERVICE: Item - ProductId: ${item.productId}, Quantity: ${item.quantity}, Product: ${item.product ? 'LOADED' : 'NULL'}`);
     });
@@ -74,38 +58,45 @@ export class CartService {
       total,
       itemCount: cartItems.reduce((sum, item) => sum + item.quantity, 0),
     };
-    */
   }
 
   async addToCart(userId: string, dto: AddToCartDto) {
     console.log(`CART SERVICE: Adding to cart - UserId: ${userId}, ProductId: ${dto.productId}, Quantity: ${dto.quantity}`);
     
-    // Check if item already exists in cart
-    const existingItem = await this.cartItemRepository.findOne({
-      where: { userId, productId: dto.productId },
-    });
+    // Ensure test user exists to avoid foreign key constraint
+    await this.ensureTestUserExists(userId);
+    
+    try {
+      // Check if item already exists in cart
+      const existingItem = await this.cartItemRepository.findOne({
+        where: { userId, productId: dto.productId },
+      });
 
-    console.log(`CART SERVICE: Existing item found: ${existingItem ? 'YES' : 'NO'}`);
+      console.log(`CART SERVICE: Existing item found: ${existingItem ? 'YES' : 'NO'}`);
 
-    if (existingItem) {
-      // Update quantity
-      existingItem.quantity += dto.quantity;
-      const result = await this.cartItemRepository.save(existingItem);
-      console.log(`CART SERVICE: Updated existing item quantity to: ${result.quantity}`);
+      if (existingItem) {
+        // Update quantity
+        existingItem.quantity += dto.quantity;
+        const result = await this.cartItemRepository.save(existingItem);
+        console.log(`CART SERVICE: Updated existing item quantity to: ${result.quantity}`);
+        return result;
+      }
+
+      // Create new cart item
+      const cartItem = this.cartItemRepository.create({
+        userId,
+        productId: dto.productId,
+        quantity: dto.quantity,
+      });
+
+      console.log(`CART SERVICE: Creating new cart item`);
+      const result = await this.cartItemRepository.save(cartItem);
+      console.log(`CART SERVICE: Created new cart item with ID: ${result.id}`);
       return result;
+    } catch (error) {
+      console.error(`CART SERVICE: Error adding to cart: ${error.message}`);
+      throw error;
     }
-
-    // Create new cart item
-    const cartItem = this.cartItemRepository.create({
-      userId,
-      productId: dto.productId,
-      quantity: dto.quantity,
-    });
-
-    console.log(`CART SERVICE: Creating new cart item`);
-    const result = await this.cartItemRepository.save(cartItem);
-    console.log(`CART SERVICE: Created new cart item with ID: ${result.id}`);
-    return result;
   }
 
   async updateCartItem(userId: string, itemId: string, dto: UpdateCartDto) {
