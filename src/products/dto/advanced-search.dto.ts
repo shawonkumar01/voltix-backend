@@ -8,7 +8,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum SortOption {
@@ -30,12 +30,26 @@ export class AdvancedSearchDto {
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    // Handle both string and array inputs
+    if (typeof value === 'string') {
+      return [value];
+    }
+    return value;
+  })
   brands?: string[];
 
   @ApiPropertyOptional({ example: ['Smartphones', 'Laptops'] })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
+  @Transform(({ value }) => {
+    // Handle both string and array inputs
+    if (typeof value === 'string') {
+      return [value];
+    }
+    return value;
+  })
   categories?: string[];
 
   @ApiPropertyOptional({ example: 500 })
@@ -55,11 +69,21 @@ export class AdvancedSearchDto {
   @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   inStock?: boolean;
 
   @ApiPropertyOptional({ example: true })
   @IsBoolean()
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   isFeatured?: boolean;
 
   @ApiPropertyOptional({ example: 4 })

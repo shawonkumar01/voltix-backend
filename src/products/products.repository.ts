@@ -15,7 +15,7 @@ export class ProductsRepository {
   async findAll(filters: FilterProductDto) {
     const {
       search, categoryId, brand,
-      minPrice, maxPrice,
+      minPrice, maxPrice, isFeatured,
       page = 1, limit = 10,
     } = filters;
 
@@ -43,6 +43,9 @@ export class ProductsRepository {
     }
     if (maxPrice !== undefined) {
       query.andWhere('product.price <= :maxPrice', { maxPrice });
+    }
+    if (isFeatured !== undefined) {
+      query.andWhere('product.isFeatured = :isFeatured', { isFeatured });
     }
 
     const total = await query.getCount();
@@ -84,10 +87,10 @@ export class ProductsRepository {
       });
     }
 
-    // Multiple categories
+    // Multiple categories - using TypeORM In operator
     if (categories && categories.length > 0) {
-      qb.andWhere('LOWER(category.name) IN (:...categories)', {
-        categories: categories.map((c) => c.toLowerCase()),
+      qb.andWhere('product.categoryId IN (:...categories)', {
+        categories: Array.isArray(categories) ? categories : [categories],
       });
     }
 
