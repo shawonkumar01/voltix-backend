@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/user.entity';
@@ -6,6 +6,7 @@ import { Product } from '../products/product.entity';
 import { Order, OrderStatus, PaymentStatus } from '../orders/order.entity';
 import { Review } from '../reviews/review.entity';
 import { Category } from '../categories/category.entity';
+import { OrdersService } from '../orders/orders.service';
 
 @Injectable()
 export class AdminService {
@@ -24,6 +25,9 @@ export class AdminService {
 
     @InjectRepository(Category)
     private readonly categoryRepo: Repository<Category>,
+
+    @Inject(forwardRef(() => OrdersService))
+    private readonly ordersService: OrdersService,
   ) {}
 
   // ─── Dashboard Overview ───────────────────────────────────────
@@ -233,6 +237,37 @@ export class AdminService {
     };
   }
 
+  async createProduct(dto: any) {
+    const productData = {
+      ...dto,
+      images: Array.isArray(dto.images) ? dto.images : [],
+    };
+    const product = this.productRepo.create(productData);
+    return this.productRepo.save(product);
+  }
+
+  async updateProduct(productId: string, dto: any) {
+    const product = await this.productRepo.findOne({ where: { id: productId } });
+    if (!product) {
+      throw new Error(`Product with id "${productId}" not found`);
+    }
+    const updateData = {
+      ...dto,
+      images: Array.isArray(dto.images) ? dto.images : [],
+    };
+    await this.productRepo.update(productId, updateData);
+    return this.productRepo.findOne({ where: { id: productId } });
+  }
+
+  async deleteProduct(productId: string) {
+    const product = await this.productRepo.findOne({ where: { id: productId } });
+    if (!product) {
+      throw new Error(`Product with id "${productId}" not found`);
+    }
+    await this.productRepo.remove(product);
+    return { message: 'Product deleted successfully' };
+  }
+
   // ─── Orders Management ────────────────────────────────────────
   async getAllOrders() {
     return this.orderRepo.find({
@@ -252,12 +287,70 @@ export class AdminService {
     return order;
   }
 
+  async updateOrderStatus(orderId: string, status: string) {
+    const order = await this.orderRepo.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new Error(`Order with id "${orderId}" not found`);
+    }
+    
+    // Validate status
+    const validStatuses = Object.values(OrderStatus);
+    if (!validStatuses.includes(status as OrderStatus)) {
+      throw new Error(`Invalid status: ${status}`);
+    }
+    
+    await this.orderRepo.update(orderId, { status: status as OrderStatus });
+    return this.orderRepo.findOne({ where: { id: orderId } });
+  }
+
+  async downloadInvoice(orderId: string) {
+    const order = await this.orderRepo.findOne({ where: { id: orderId } });
+    if (!order) {
+      throw new Error(`Order with id "${orderId}" not found`);
+    }
+    
+    return this.ordersService.generateInvoice(order.userId, orderId);
+  }
+
   // ─── Categories Management ────────────────────────────────────
   async getAllCategories() {
     return this.categoryRepo.find({
       relations: ['products'],
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async createCategory(dto: { name: string; description?: string; image?: string }) {
+    const category = this.categoryRepo.create({
+      name: dto.name,
+      description: dto.description,
+      image: dto.image,
+    });
+    return this.categoryRepo.save(category);
+  }
+
+  async updateCategory(categoryId: string, dto: { name?: string; description?: string; image?: string }) {
+    const category = await this.categoryRepo.findOne({ where: { id: categoryId } });
+    if (!category) {
+      throw new Error(`Category with id "${categoryId}" not found`);
+    }
+    await this.categoryRepo.update(categoryId, dto);
+    return this.categoryRepo.findOne({ where: { id: categoryId } });
+  }
+
+  async deleteCategory(categoryId: string) {
+    const category = await this.categoryRepo.findOne({
+      where: { id: categoryId },
+      relations: ['products'],
+    });
+    if (!category) {
+      throw new Error(`Category with id "${categoryId}" not found`);
+    }
+    if (category.products && category.products.length > 0) {
+      throw new Error('Cannot delete category with associated products');
+    }
+    await this.categoryRepo.remove(category);
+    return { message: 'Category deleted successfully' };
   }
 
   // ─── Reviews Management ───────────────────────────────────────

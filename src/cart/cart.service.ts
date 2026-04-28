@@ -15,10 +15,11 @@ export class CartService {
     const cartItems = await this.cartItemRepository.find({
       where: { userId },
       relations: ['product'],
+      order: { createdAt: 'DESC' },
     });
 
     const total = cartItems.reduce((sum, item) => {
-      const price = item.product ? item.product.price : 0;
+      const price = item.product ? Number(item.product.price) : 0;
       return sum + (price * item.quantity);
     }, 0);
 
@@ -35,20 +36,20 @@ export class CartService {
       const existingItem = await this.cartItemRepository.findOne({
         where: { userId, productId: dto.productId },
       });
-
+      
       if (existingItem) {
         // Update quantity
         existingItem.quantity += dto.quantity;
         return await this.cartItemRepository.save(existingItem);
       }
-
+      
       // Create new cart item
       const cartItem = this.cartItemRepository.create({
         userId,
         productId: dto.productId,
         quantity: dto.quantity,
       });
-
+      
       return await this.cartItemRepository.save(cartItem);
     } catch (error) {
       throw error;

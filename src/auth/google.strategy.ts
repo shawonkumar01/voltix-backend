@@ -36,11 +36,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         picture: photos[0].value,
         accessToken,
       };
-
-      console.log('Google OAuth Profile:', user);
       done(null, user);
     } catch (error) {
-      console.error('Google OAuth validation error:', error);
       done(error, null);
     }
   }

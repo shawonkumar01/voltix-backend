@@ -18,11 +18,12 @@ async function bootstrap() {
       mkdirSync(uploadsPath, { recursive: true });
     }
 
+    app.setGlobalPrefix('api');
+
+    // Serve uploads statically outside of API prefix
     app.useStaticAssets(uploadsPath, {
       prefix: '/uploads/',
     });
-
-    app.setGlobalPrefix('api');
 
     app.useGlobalPipes(
       new ValidationPipe({
@@ -35,7 +36,7 @@ async function bootstrap() {
     app.useGlobalFilters(new HttpExceptionFilter());
 
     app.enableCors({
-      origin: ['http://localhost:3000', 'http://localhost:3001'],
+      origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:9000'],
       credentials: true, // Allow credentials for JWT
     });
 

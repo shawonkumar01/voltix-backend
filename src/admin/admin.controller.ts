@@ -1,10 +1,14 @@
 import {
     Controller,
     Get,
+    Post,
     Patch,
     Delete,
     Param,
+    Body,
     UseGuards,
+    Req,
+    Res,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
@@ -66,6 +70,27 @@ export class AdminController {
         return this.adminService.toggleProductStatus(id);
     }
 
+    @Post('products')
+    @ApiOperation({ summary: 'Create new product' })
+    @ApiAdminResponses()
+    createProduct(@Body() dto: any) {
+        return this.adminService.createProduct(dto);
+    }
+
+    @Patch('products/:id')
+    @ApiOperation({ summary: 'Update product' })
+    @ApiAdminResponses()
+    updateProduct(@Param('id') id: string, @Body() dto: any) {
+        return this.adminService.updateProduct(id, dto);
+    }
+
+    @Delete('products/:id')
+    @ApiOperation({ summary: 'Delete product' })
+    @ApiAdminResponses()
+    deleteProduct(@Param('id') id: string) {
+        return this.adminService.deleteProduct(id);
+    }
+
     // ─── Orders ───────────────────────────────────────────────────
     @Get('orders')
     @ApiOperation({ summary: 'Get all orders' })
@@ -81,12 +106,50 @@ export class AdminController {
         return this.adminService.getOrderDetails(id);
     }
 
+    @Patch('orders/:id/status')
+    @ApiOperation({ summary: 'Update order status' })
+    @ApiAdminResponses()
+    updateOrderStatus(@Param('id') id: string, @Body() dto: { status: string }) {
+        return this.adminService.updateOrderStatus(id, dto.status);
+    }
+
+    @Get('orders/:id/invoice')
+    @ApiOperation({ summary: 'Download order invoice' })
+    @ApiAdminResponses()
+    async downloadInvoice(@Param('id') id: string, @Res() res) {
+        const pdfBuffer = await this.adminService.downloadInvoice(id);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="invoice-${id}.pdf"`);
+        res.send(pdfBuffer);
+    }
+
     // ─── Categories ───────────────────────────────────────────────
     @Get('categories')
     @ApiOperation({ summary: 'Get all categories with product count' })
     @ApiAdminResponses()
     getAllCategories() {
         return this.adminService.getAllCategories();
+    }
+
+    @Post('categories')
+    @ApiOperation({ summary: 'Create new category' })
+    @ApiAdminResponses()
+    createCategory(@Body() dto: { name: string; description?: string; image?: string }) {
+        return this.adminService.createCategory(dto);
+    }
+
+    @Patch('categories/:id')
+    @ApiOperation({ summary: 'Update category' })
+    @ApiAdminResponses()
+    updateCategory(@Param('id') id: string, @Body() dto: { name?: string; description?: string; image?: string }) {
+        return this.adminService.updateCategory(id, dto);
+    }
+
+    @Delete('categories/:id')
+    @ApiOperation({ summary: 'Delete category' })
+    @ApiAdminResponses()
+    deleteCategory(@Param('id') id: string) {
+        return this.adminService.deleteCategory(id);
     }
 
     // ─── Reviews ──────────────────────────────────────────────────

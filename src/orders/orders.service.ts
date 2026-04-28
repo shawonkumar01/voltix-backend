@@ -46,24 +46,21 @@ export class OrdersService {
       );
     }
 
-    // Validate all items
+    // Validate all items and get product data from relations
     for (const item of cartItems) {
-      const product = await this.productRepo.findOne({
-        where: { id: item.productId },
-      });
-      if (!product) {
+      if (!item.product) {
         throw new NotFoundException(
-          `Product "${item.productId}" no longer exists`,
+          `Product "${item.productId}" not found`,
         );
       }
-      if (!product.isActive) {
+      if (!item.product.isActive) {
         throw new BadRequestException(
-          `Product "${product.name}" is no longer available`,
+          `Product "${item.product.name}" is no longer available`,
         );
       }
-      if (product.stock < item.quantity) {
+      if (item.product.stock < item.quantity) {
         throw new BadRequestException(
-          `Insufficient stock for "${product.name}". Only ${product.stock} available`,
+          `Insufficient stock for "${item.product.name}". Only ${item.product.stock} available`,
         );
       }
     }

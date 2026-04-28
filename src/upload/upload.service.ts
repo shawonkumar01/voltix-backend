@@ -16,12 +16,14 @@ export class UploadService {
     // Compress image for web optimization
     const compressedPath = await this.compressImage(file);
     
-    const url = `${hostUrl}/uploads/${file.filename}`;
+    // Get the compressed filename from the path
+    const compressedFilename = path.basename(compressedPath);
+    const url = `${hostUrl}/uploads/${compressedFilename}`;
 
     const upload = await this.uploadRepository.create({
-      filename: file.filename,
+      filename: compressedFilename,
       originalName: file.originalname,
-      mimeType: file.mimetype,
+      mimeType: 'image/webp',
       size: file.size,
       path: compressedPath,
       url,

@@ -41,12 +41,7 @@ export class CartController {
   @ApiOperation({ summary: 'Get my cart' })
   async getCart(@Request() req: AuthenticatedRequest) {
     const userId = this.getUserId(req);
-    
-    try {
-      return await this.cartService.getCart(userId);
-    } catch (error) {
-      return { items: [], total: 0, itemCount: 0 };
-    }
+    return await this.cartService.getCart(userId);
   }
 
   @Post()

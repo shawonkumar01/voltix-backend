@@ -38,8 +38,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = exception.message;
       }
     } else if (exception instanceof Error && exception.message) {
-      // Log unexpected errors
-      console.error('Unexpected error:', exception);
       message = exception.message;
     }
 

@@ -8,6 +8,7 @@ import { Order } from '../orders/order.entity';
 import { OrderItem } from '../orders/order-item.entity';
 import { Review } from '../reviews/review.entity';
 import { Category } from '../categories/category.entity';
+import { OrdersModule } from '../orders/orders.module';
 
 @Module({
     imports: [
@@ -19,6 +20,7 @@ import { Category } from '../categories/category.entity';
             Review,
             Category,
         ]),
+        OrdersModule,
     ],
     controllers: [AdminController],
     providers: [AdminService],
