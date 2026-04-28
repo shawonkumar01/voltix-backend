@@ -18,8 +18,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       throw new Error('GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in environment variables');
     }
 
-    console.log('Google OAuth Config:', { clientID: clientID.substring(0, 20) + '...', callbackURL });
-
     super({
       clientID,
       clientSecret,

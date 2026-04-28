@@ -42,26 +42,17 @@ export class AuthController {
   @UseGuards(GoogleGuard)
   async googleAuthCallback(@Req() req, @Res() res) {
     try {
-      console.log('Google OAuth Callback - User:', req.user);
-      
       const result = await this.authService.validateGoogleUser(req.user);
       
-      console.log('Google OAuth Result:', result);
-      
-      // Redirect to frontend home page (shop folder) - use hardcoded URL to avoid env issues
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const redirectUrl = `${frontendUrl}/home?token=${result.accessToken}`;
       
-      console.log('Redirecting to:', redirectUrl);
       res.redirect(redirectUrl);
     } catch (error) {
-      console.error('Google OAuth callback error:', error);
       
-      // Redirect to frontend with error
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
       const errorUrl = `${frontendUrl}/auth/error?message=${encodeURIComponent(error.message)}`;
       
-      console.log('Error redirecting to:', errorUrl);
       res.redirect(errorUrl);
     }
   }

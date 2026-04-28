@@ -1,34 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/user.entity';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private config: ConfigService) {
+  constructor(
+    private config: ConfigService,
+    @InjectRepository(User)
+    private usersRepository: Repository<User>,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'test-secret', // Use a simple secret for testing
+      secretOrKey: config.get<string>('JWT_SECRET') || 'test-secret',
     });
   }
 
-  validate(payload: JwtPayload): { id: string; email: string; role: string } {
-    // Handle mock token for testing
-    if (payload.sub === '00000000-0000-0000-0000-000000000000' && 
-        payload.email === 'test@example.com') {
-      return {
-        id: '00000000-0000-0000-0000-000000000000',
-        email: 'test@example.com',
-        role: 'user',
-      };
+  async validate(payload: any): Promise<{ id: string; email: string; role: string }> {
+    const { sub: userId } = payload;
+    
+    // Validate user exists in database
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
     
     return {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role,
+      id: user.id,
+      email: user.email,
+      role: user.role,
     };
   }
 }

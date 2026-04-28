@@ -3,49 +3,18 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CartItem } from './cart-item.entity';
 import { AddToCartDto, UpdateCartDto } from './dto/add-to-cart.dto';
-import { User, UserRole } from '../users/user.entity';
-import { Product } from '../products/product.entity';
 
 @Injectable()
 export class CartService {
   constructor(
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
   ) {}
 
-  async ensureTestUserExists(userId: string): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      console.log(`CART SERVICE: Creating test user ${userId}`);
-      const testUser = this.userRepository.create({
-        firstName: 'Test',
-        lastName: 'User',
-        email: 'test@example.com',
-        password: 'hashedpassword',
-        role: UserRole.USER,
-        isActive: true,
-        isEmailVerified: true,
-      });
-      // Manually set the ID since it's not part of the create method
-      testUser.id = userId;
-      await this.userRepository.save(testUser);
-      console.log(`CART SERVICE: Test user created successfully`);
-    }
-  }
-
   async getCart(userId: string) {
-    console.log(`CART SERVICE: Getting cart for userId: ${userId}`);
-    
     const cartItems = await this.cartItemRepository.find({
       where: { userId },
       relations: ['product'],
-    });
-
-    console.log(`CART SERVICE: Found ${cartItems.length} cart items`);
-    cartItems.forEach(item => {
-      console.log(`CART SERVICE: Item - ProductId: ${item.productId}, Quantity: ${item.quantity}, Product: ${item.product ? 'LOADED' : 'NULL'}`);
     });
 
     const total = cartItems.reduce((sum, item) => {
@@ -61,25 +30,16 @@ export class CartService {
   }
 
   async addToCart(userId: string, dto: AddToCartDto) {
-    console.log(`CART SERVICE: Adding to cart - UserId: ${userId}, ProductId: ${dto.productId}, Quantity: ${dto.quantity}`);
-    
-    // Ensure test user exists to avoid foreign key constraint
-    await this.ensureTestUserExists(userId);
-    
     try {
       // Check if item already exists in cart
       const existingItem = await this.cartItemRepository.findOne({
         where: { userId, productId: dto.productId },
       });
 
-      console.log(`CART SERVICE: Existing item found: ${existingItem ? 'YES' : 'NO'}`);
-
       if (existingItem) {
         // Update quantity
         existingItem.quantity += dto.quantity;
-        const result = await this.cartItemRepository.save(existingItem);
-        console.log(`CART SERVICE: Updated existing item quantity to: ${result.quantity}`);
-        return result;
+        return await this.cartItemRepository.save(existingItem);
       }
 
       // Create new cart item
@@ -89,12 +49,8 @@ export class CartService {
         quantity: dto.quantity,
       });
 
-      console.log(`CART SERVICE: Creating new cart item`);
-      const result = await this.cartItemRepository.save(cartItem);
-      console.log(`CART SERVICE: Created new cart item with ID: ${result.id}`);
-      return result;
+      return await this.cartItemRepository.save(cartItem);
     } catch (error) {
-      console.error(`CART SERVICE: Error adding to cart: ${error.message}`);
       throw error;
     }
   }

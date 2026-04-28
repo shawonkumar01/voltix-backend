@@ -15,18 +15,19 @@ import {
     ApiCreateResponses,
     ApiProtectedResponses,
 } from '../common/decorators/api-response.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @ApiTags('Wishlist')
+@ApiBearerAuth()
 @Controller('wishlist')
+@UseGuards(JwtAuthGuard)
 export class WishlistController {
     constructor(private readonly wishlistService: WishlistService) { }
 
     @Get()
     @ApiOperation({ summary: 'Get my wishlist' })
-    @ApiProtectedResponses()
     getWishlist(@Request() req) {
-        // Use mock user ID for testing
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.id;
         return this.wishlistService.getWishlist(userId);
     }
 
@@ -34,8 +35,7 @@ export class WishlistController {
     @ApiOperation({ summary: 'Add product to wishlist' })
     @ApiCreateResponses()
     addToWishlist(@Request() req, @Body() dto: AddWishlistDto) {
-        // Use mock user ID for testing
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.id;
         return this.wishlistService.addToWishlist(userId, dto);
     }
 
@@ -43,8 +43,7 @@ export class WishlistController {
     @ApiOperation({ summary: 'Clear entire wishlist' })
     @ApiProtectedResponses()
     clearWishlist(@Request() req) {
-        // Use mock user ID for testing
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.id;
         return this.wishlistService.clearWishlist(userId);
     }
 
@@ -52,8 +51,7 @@ export class WishlistController {
     @ApiOperation({ summary: 'Check if product is in wishlist' })
     @ApiProtectedResponses()
     isInWishlist(@Request() req, @Param('productId') productId: string) {
-        // Use mock user ID for testing
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.id;
         return this.wishlistService.isInWishlist(userId, productId);
     }
 
@@ -64,8 +62,7 @@ export class WishlistController {
         @Request() req,
         @Param('productId') productId: string,
     ) {
-        // Use mock user ID for testing
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.id;
         return this.wishlistService.removeByProductId(userId, productId);
     }
 
@@ -73,8 +70,7 @@ export class WishlistController {
     @ApiOperation({ summary: 'Remove item from wishlist by wishlist id' })
     @ApiProtectedResponses()
     removeFromWishlist(@Request() req, @Param('id') id: string) {
-        // Use mock user ID for testing
-        const userId = '00000000-0000-0000-0000-000000000000';
+        const userId = req.user.id;
         return this.wishlistService.removeFromWishlist(userId, id);
     }
 }

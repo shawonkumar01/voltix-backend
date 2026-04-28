@@ -152,7 +152,8 @@ export class PaymentsService {
         await this.handlePaymentFailed(event.data.object as Stripe.PaymentIntent);
         break;
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // Log unhandled event types for monitoring
+        break;
     }
 
     return { received: true };
@@ -172,8 +173,6 @@ export class PaymentsService {
       { stripePaymentIntentId: paymentIntent.id },
       { status: PaymentEntityStatus.SUCCESS },
     );
-
-    console.log(`✅ Payment succeeded for order: ${orderId}`);
   }
 
   private async handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
@@ -191,8 +190,6 @@ export class PaymentsService {
         failureReason: paymentIntent.last_payment_error?.message ?? 'Unknown error',
       },
     );
-
-    console.log(`❌ Payment failed for order: ${orderId}`);
   }
 
   async refundPayment(userId: string, orderId: string) {
