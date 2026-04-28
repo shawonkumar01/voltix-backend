@@ -65,6 +65,7 @@ export class ProductsRepository {
       specs,
       sortBy = SortOption.NEWEST,
       page = 1, limit = 20,
+      createdAfter, createdBefore,
     } = filters;
 
     const qb = this.productRepo
@@ -92,6 +93,14 @@ export class ProductsRepository {
       qb.andWhere('product.categoryId IN (:...categories)', {
         categories: Array.isArray(categories) ? categories : [categories],
       });
+    }
+
+    // Date range filtering for new arrivals
+    if (createdAfter) {
+      qb.andWhere('product.createdAt >= :createdAfter', { createdAfter: new Date(createdAfter) });
+    }
+    if (createdBefore) {
+      qb.andWhere('product.createdAt <= :createdBefore', { createdBefore: new Date(createdBefore) });
     }
 
     // Price range

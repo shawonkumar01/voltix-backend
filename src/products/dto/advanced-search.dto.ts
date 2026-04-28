@@ -124,4 +124,20 @@ export class AdvancedSearchDto {
   @Type(() => Number)
   @IsOptional()
   limit?: number = 20;
+
+  @ApiPropertyOptional({
+    example: '2024-01-01',
+    description: 'Filter products created after this date (ISO format)',
+  })
+  @IsString()
+  @IsOptional()
+  createdAfter?: string;
+
+  @ApiPropertyOptional({
+    example: '2024-12-31',
+    description: 'Filter products created before this date (ISO format)',
+  })
+  @IsString()
+  @IsOptional()
+  createdBefore?: string;
 }
