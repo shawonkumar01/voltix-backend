@@ -81,7 +81,7 @@ export class RecommendationService {
         }
 
         // Brand preference
-        if (userPreferences.brands?.includes(product.brand)) {
+        if (userPreferences.brands?.includes(product.brand?.name || product.brandId)) {
           score += 8;
           reason = reason ? `${reason}, Your Preferred Brand` : 'Your Preferred Brand';
         }

@@ -1,6 +1,23 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
+export class BrandDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  name: string;
+
+  @ApiPropertyOptional()
+  logo?: string;
+
+  @ApiPropertyOptional()
+  description?: string;
+
+  @ApiPropertyOptional()
+  website?: string;
+}
+
 export class ProductResponseDto {
   @ApiProperty()
   id: string;
@@ -24,7 +41,10 @@ export class ProductResponseDto {
   stock: number;
 
   @ApiPropertyOptional()
-  brand?: string;
+  brand?: BrandDto;
+
+  @ApiPropertyOptional()
+  brandId?: string;
 
   @ApiPropertyOptional()
   model?: string;

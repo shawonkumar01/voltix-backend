@@ -102,7 +102,7 @@ export class OrdersService {
         orderId: order.id,
         productId: item.productId,
         productName: item.product.name,
-        productBrand: item.product.brand,
+        productBrand: item.product.brand?.name,
         productImage: item.product.images?.[0] ?? null,
         quantity: item.quantity,
         price: item.product.price,

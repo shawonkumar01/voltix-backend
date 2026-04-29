@@ -9,6 +9,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { Brand } from '../brands/brand.entity';
 import { Review } from '../reviews/review.entity';
 import { CartItem } from '../cart/cart-item.entity';
 import { OrderItem } from '../orders/order-item.entity';
@@ -37,8 +38,12 @@ export class Product {
   @Column({ default: 0 })
   soldCount: number;
 
+  @ManyToOne(() => Brand, { nullable: true })
+  @JoinColumn({ name: 'brandId' })
+  brand: Brand;
+
   @Column({ nullable: true })
-  brand: string;
+  brandId: string;
 
   @Column({ nullable: true })
   model: string;

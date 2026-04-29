@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/user.entity';
 import { Category } from './categories/category.entity';
+import { Brand } from './brands/brand.entity';
 import { Product } from './products/product.entity';
 import { CartItem } from './cart/cart-item.entity';
 import { Order } from './orders/order.entity';
@@ -13,6 +14,7 @@ import { Wishlist } from './wishlist/wishlist.entity';
 import { Upload } from './upload/upload.entity';
 import { UsersModule } from './users/users.module';
 import { CategoriesModule } from './categories/categories.module';
+import { BrandsModule } from './brands/brands.module';
 import { ProductsModule } from './products/products.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
@@ -39,6 +41,7 @@ import { Payment } from './payments/payments.entity';
         entities: [
           User,
           Category,
+          Brand,
           Product,
           CartItem,
           Order,
@@ -55,6 +58,7 @@ import { Payment } from './payments/payments.entity';
     AuthModule,
     UsersModule,
     CategoriesModule,
+    BrandsModule,
     ProductsModule,
     CartModule,
     OrdersModule,

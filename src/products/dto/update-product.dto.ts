@@ -44,10 +44,10 @@ export class UpdateProductDto {
   @IsOptional()
   discount?: number;
 
-  @ApiPropertyOptional({ example: 'Apple' })
+  @ApiPropertyOptional({ example: 'brand-uuid-here' })
   @IsString()
   @IsOptional()
-  brand?: string;
+  brandId?: string;
 
   @ApiPropertyOptional({ example: 'iPhone 15 Pro' })
   @IsString()
