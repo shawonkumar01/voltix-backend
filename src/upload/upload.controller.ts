@@ -12,10 +12,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { UploadService } from './upload.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('upload')
 export class UploadController {
-  constructor(private readonly uploadService: UploadService) {}
+  constructor(
+    private readonly uploadService: UploadService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
   @UseInterceptors(
@@ -44,8 +48,8 @@ export class UploadController {
       throw new BadRequestException('File is required');
     }
 
-    const hostUrl = `${req.protocol}://${req.get('host')}`;
-    const upload = await this.uploadService.saveFile(file, hostUrl);
+    const baseUrl = this.configService.get<string>('BACKEND_URL', 'http://localhost:3001');
+    const upload = await this.uploadService.saveFile(file, baseUrl);
 
     return {
       id: upload.id,
