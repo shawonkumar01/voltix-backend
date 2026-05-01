@@ -11,7 +11,6 @@ export async function seedAdmin(dataSource: DataSource) {
   });
 
   if (existingAdmin) {
-    console.log('Admin user already exists');
     return existingAdmin;
   }
 
@@ -30,6 +29,5 @@ export async function seedAdmin(dataSource: DataSource) {
   });
 
   await userRepository.save(admin);
-  console.log('Admin user created successfully');
   return admin;
 }
