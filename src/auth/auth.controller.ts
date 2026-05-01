@@ -43,16 +43,16 @@ export class AuthController {
   async googleAuthCallback(@Req() req, @Res() res) {
     try {
       const result = await this.authService.validateGoogleUser(req.user);
-      
+
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const redirectUrl = `${frontendUrl}/home?token=${result.accessToken}`;
-      
+      const redirectUrl = `${frontendUrl}/oauth/callback?token=${result.accessToken}`;
+
       res.redirect(redirectUrl);
     } catch (error) {
-      
+
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      const errorUrl = `${frontendUrl}/auth/error?message=${encodeURIComponent(error.message)}`;
-      
+      const errorUrl = `${frontendUrl}/oauth/callback?message=${encodeURIComponent(error.message)}`;
+
       res.redirect(errorUrl);
     }
   }
