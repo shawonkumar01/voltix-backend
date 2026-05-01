@@ -46,6 +46,15 @@ export class ReviewsRepository {
         });
     }
 
+    async findFeatured() {
+        return this.reviewRepo.find({
+            where: { isFeatured: true },
+            relations: ['user', 'product'],
+            order: { createdAt: 'DESC' },
+            take: 6,
+        });
+    }
+
     async create(data: Partial<Review>) {
         const review = this.reviewRepo.create(data);
         return this.reviewRepo.save(review);

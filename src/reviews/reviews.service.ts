@@ -168,6 +168,50 @@ export class ReviewsService {
         return this.reviewsRepository.findAll();
     }
 
+    async getFeaturedReviews() {
+        const reviews = await this.reviewsRepository.findFeatured();
+        return reviews.map((r) => ({
+            id: r.id,
+            rating: r.rating,
+            title: r.title,
+            comment: r.comment,
+            isVerifiedPurchase: r.isVerifiedPurchase,
+            helpfulCount: r.helpfulCount,
+            createdAt: r.createdAt,
+            user: {
+                id: r.user.id,
+                firstName: r.user.firstName,
+                lastName: r.user.lastName,
+                avatar: r.user.avatar,
+            },
+            product: {
+                id: r.product.id,
+                name: r.product.name,
+                images: r.product.images,
+            },
+        }));
+    }
+
+    async toggleFeatured(reviewId: string) {
+        const review = await this.reviewsRepository.findById(reviewId);
+        if (!review) {
+            throw new NotFoundException('Review not found');
+        }
+
+        const updated = await this.reviewsRepository.update(reviewId, {
+            isFeatured: !review.isFeatured,
+        });
+
+        if (!updated) {
+            throw new NotFoundException('Review not found');
+        }
+
+        return {
+            message: `Review ${updated.isFeatured ? 'added to' : 'removed from'} featured`,
+            isFeatured: updated.isFeatured,
+        };
+    }
+
     // Recalculate and update product rating
     private async updateProductRating(productId: string) {
         const stats =

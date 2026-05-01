@@ -28,6 +28,13 @@ export class ReviewsController {
     constructor(private readonly reviewsService: ReviewsService) { }
 
     // Public routes
+    @Get('featured')
+    @ApiOperation({ summary: 'Get featured reviews for homepage' })
+    @ApiProtectedResponses()
+    getFeaturedReviews() {
+        return this.reviewsService.getFeaturedReviews();
+    }
+
     @Get('product/:productId')
     @ApiOperation({ summary: 'Get all reviews for a product' })
     @ApiProtectedResponses()
@@ -104,5 +111,15 @@ export class ReviewsController {
     @ApiAdminResponses()
     adminDelete(@Request() req: any, @Param('id') id: string) {
         return this.reviewsService.remove(req.user.id, id, true);
+    }
+
+    @Patch('admin/:id/featured')
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('admin')
+    @ApiOperation({ summary: 'Toggle featured status - Admin only' })
+    @ApiAdminResponses()
+    toggleFeatured(@Param('id') id: string) {
+        return this.reviewsService.toggleFeatured(id);
     }
 }

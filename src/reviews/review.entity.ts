@@ -44,6 +44,9 @@ export class Review {
   @Column({ default: 0 })
   helpfulCount: number;
 
+  @Column({ default: false })
+  isFeatured: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
