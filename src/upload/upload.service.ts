@@ -3,57 +3,68 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Upload } from './upload.entity';
 import { UploadRepository } from './upload.repository';
 import * as sharp from 'sharp';
-import * as fs from 'fs';
-import * as path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
 
-  constructor(private readonly uploadRepository: UploadRepository) {}
+  constructor(
+    private readonly uploadRepository: UploadRepository,
+    private readonly configService: ConfigService,
+  ) {
+    cloudinary.config({
+      cloud_name: this.configService.get('CLOUDINARY_CLOUD_NAME'),
+      api_key: this.configService.get('CLOUDINARY_API_KEY'),
+      api_secret: this.configService.get('CLOUDINARY_API_SECRET'),
+    });
+  }
 
-  async saveFile(file: Express.Multer.File, hostUrl: string): Promise<Upload> {
-    // Compress image for web optimization
-    const compressedPath = await this.compressImage(file);
-    
-    // Get the compressed filename from the path
-    const compressedFilename = path.basename(compressedPath);
-    const url = `${hostUrl}/uploads/${compressedFilename}`;
+  async saveFile(file: Express.Multer.File): Promise<Upload> {
+    // Compress image to buffer
+    const compressedBuffer = await this.compressImage(file);
+
+    // Upload to Cloudinary
+    const cloudinaryUrl = await this.uploadToCloudinary(compressedBuffer, file.originalname);
 
     const upload = await this.uploadRepository.create({
-      filename: compressedFilename,
+      filename: file.originalname,
       originalName: file.originalname,
       mimeType: 'image/webp',
-      size: file.size,
-      path: compressedPath,
-      url,
+      size: compressedBuffer.length,
+      path: cloudinaryUrl,
+      url: cloudinaryUrl,
     });
 
-    this.logger.log(`Stored upload record ${upload.id} (${upload.url})`);
-
+    this.logger.log(`Uploaded to Cloudinary: ${upload.url}`);
     return upload;
   }
 
-  private async compressImage(file: Express.Multer.File): Promise<string> {
-    const outputPath = file.path.replace(/\.[^/.]+$/, '_compressed.webp');
-    
-    try {
-      await sharp(file.path)
-        .resize(1200, 1200, { 
-          fit: 'inside',
-          withoutEnlargement: true 
-        })
-        .webp({ quality: 85 })
-        .toFile(outputPath);
-      
-      // Remove original file to save space
-      fs.unlinkSync(file.path);
-      
-      return outputPath;
-    } catch (error) {
-      this.logger.warn('Image compression failed, using original file', error);
-      return file.path;
-    }
+  private async compressImage(file: Express.Multer.File): Promise<Buffer> {
+    return sharp(file.buffer)
+      .resize(1200, 1200, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 85 })
+      .toBuffer();
+  }
+
+  private uploadToCloudinary(buffer: Buffer, filename: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'image',
+          folder: 'voltix',
+          public_id: filename.replace(/\.[^/.]+$/, ''),
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result.secure_url);
+        },
+      ).end(buffer);
+    });
   }
 
   async findAll() {
