@@ -6,6 +6,9 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import helmet from 'helmet';
+import { LoggerService } from './logger/logger.service';
 
 async function bootstrap() {
   try {
@@ -35,10 +38,19 @@ async function bootstrap() {
 
     app.useGlobalFilters(new HttpExceptionFilter());
 
+    // Security headers
+    app.use(helmet());
+
+    // Note: Rate limiting is configured at module level in app.module.ts
+    // Global guard can be applied here if needed for specific endpoints
+
     app.enableCors({
       origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:9000'],
       credentials: true, // Allow credentials for JWT
     });
+
+    const logger = app.get(LoggerService);
+    logger.log('🚀 Voltix backend starting up...', 'Bootstrap');
 
     const config = new DocumentBuilder()
       .setTitle('Voltix API ⚡')
@@ -51,8 +63,8 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
 
     await app.listen(3001);
-    console.log('🚀 Voltix backend running on http://localhost:3001/api');
-    console.log('📚 Swagger docs at http://localhost:3001/api/docs');
+    logger.log('🚀 Voltix backend running on http://localhost:3001/api', 'Bootstrap');
+    logger.log('📚 Swagger docs at http://localhost:3001/api/docs', 'Bootstrap');
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);

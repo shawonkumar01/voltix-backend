@@ -8,6 +8,7 @@ import { AuthController } from './auth.controller';
 import { PasswordResetController } from './password-reset.controller';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
+import { AppJwtService } from './jwt.service';
 import { JwtStrategy } from './jwt.strategy';
 import { GoogleStrategy } from './google.strategy';
 import { GoogleGuard } from './guards/google.guard';
@@ -48,7 +49,7 @@ import { User } from '../users/user.entity';
     }),
   ],
   controllers: [AuthController, PasswordResetController],
-  providers: [AuthService, PasswordResetService, EmailService, JwtStrategy, GoogleStrategy, GoogleGuard],
-  exports: [AuthService, PasswordResetService, EmailService],
+  providers: [AuthService, PasswordResetService, AppJwtService, EmailService, JwtStrategy, GoogleStrategy, GoogleGuard],
+  exports: [AuthService, PasswordResetService, AppJwtService, EmailService],
 })
 export class AuthModule {}

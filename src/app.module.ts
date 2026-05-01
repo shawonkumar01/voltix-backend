@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
 import { User } from './users/user.entity';
 import { Category } from './categories/category.entity';
@@ -25,10 +26,29 @@ import { AdminModule } from './admin/admin.module';
 import { UploadModule } from './upload/upload.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { Payment } from './payments/payments.entity';
+import { HealthModule } from './health/health.module';
+import { LoggerModule } from './logger/logger.module';
+import { CacheModule } from './cache/cache.module';
+import { SentryModule } from './monitoring/sentry.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([{
+      name: 'short',
+      ttl: 1000,
+      limit: 3,
+    },
+    {
+      name: 'medium',
+      ttl: 10000,
+      limit: 20,
+    },
+    {
+      name: 'long',
+      ttl: 60000,
+      limit: 100,
+    }]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
@@ -65,9 +85,13 @@ import { Payment } from './payments/payments.entity';
     ReviewsModule,
     WishlistModule,
     PaymentsModule,
+    HealthModule,
     AdminModule,
     UploadModule,
     AnalyticsModule,
+    LoggerModule,
+    CacheModule,
+    SentryModule,
   ],
 })
 export class AppModule {}
