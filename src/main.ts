@@ -32,7 +32,6 @@ async function bootstrap() {
       new ValidationPipe({
         whitelist: true,
         transform: true,
-
       }),
     );
 
@@ -45,10 +44,12 @@ async function bootstrap() {
     // Global guard can be applied here if needed for specific endpoints
 
     app.enableCors({
-      origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:9000'],
-      credentials: true, // Allow credentials for JWT
+      origin: [
+        'http://localhost:3000',
+        process.env.FRONTEND_URL ?? 'https://voltix-frontend.vercel.app',
+      ],
+      credentials: true,
     });
-
     const logger = app.get(LoggerService);
     logger.log('🚀 Voltix backend starting up...', 'Bootstrap');
 
@@ -63,8 +64,14 @@ async function bootstrap() {
     SwaggerModule.setup('api/docs', app, document);
 
     await app.listen(3001);
-    logger.log('🚀 Voltix backend running on http://localhost:3001/api', 'Bootstrap');
-    logger.log('📚 Swagger docs at http://localhost:3001/api/docs', 'Bootstrap');
+    logger.log(
+      '🚀 Voltix backend running on http://localhost:3001/api',
+      'Bootstrap',
+    );
+    logger.log(
+      '📚 Swagger docs at http://localhost:3001/api/docs',
+      'Bootstrap',
+    );
   } catch (error) {
     console.error('Failed to start application:', error);
     process.exit(1);

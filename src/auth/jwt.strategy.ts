@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any): Promise<{ id: string; email: string; role: string }> {
+  async validate(payload: any): Promise<any> {
     const { sub: userId } = payload;
     
     // Validate user exists in database
@@ -32,7 +32,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       id: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role,
+      avatar: user.avatar,
     };
   }
 }
