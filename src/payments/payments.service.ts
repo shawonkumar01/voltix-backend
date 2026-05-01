@@ -7,7 +7,7 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Stripe from 'stripe';
-import { Order, PaymentStatus, OrderStatus } from '../orders/order.entity';
+import { Order, PaymentStatus, OrderStatus, PaymentMethod } from '../orders/order.entity';
 import { Payment, PaymentType, PaymentEntityStatus } from './payments.entity';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 
@@ -44,6 +44,33 @@ export class PaymentsService {
       throw new BadRequestException('Cannot pay for a cancelled order');
     }
 
+    // Handle Cash on Delivery
+    if (dto.paymentMethod === PaymentMethod.CASH_ON_DELIVERY) {
+      await this.orderRepo.update(order.id, {
+        paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+        paymentStatus: PaymentStatus.UNPAID,
+        status: OrderStatus.CONFIRMED,
+      });
+
+      // Save COD payment record
+      const payment = this.paymentRepo.create({
+        orderId: order.id,
+        userId,
+        type: PaymentType.CHARGE,
+        status: PaymentEntityStatus.PENDING,
+        amount: order.totalAmount,
+        currency: 'usd',
+      });
+      await this.paymentRepo.save(payment);
+
+      return {
+        paymentMethod: 'cash_on_delivery',
+        orderNumber: order.orderNumber,
+        amount: order.totalAmount,
+        message: 'Order placed successfully. Pay on delivery.',
+      };
+    }
+
     // Create Stripe payment intent
     const paymentIntent = await this.stripe.paymentIntents.create({
       amount: Math.round(Number(order.totalAmount) * 100),
@@ -66,11 +93,13 @@ export class PaymentsService {
 
     // Update order
     await this.orderRepo.update(order.id, {
+      paymentMethod: PaymentMethod.STRIPE,
       stripePaymentId: paymentIntent.id,
       stripeClientSecret: paymentIntent.client_secret ?? '',
     });
 
     return {
+      paymentMethod: 'stripe',
       clientSecret: paymentIntent.client_secret ?? '',
       paymentIntentId: paymentIntent.id,
       amount: order.totalAmount,
