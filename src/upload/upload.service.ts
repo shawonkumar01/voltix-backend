@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Upload } from './upload.entity';
 import { UploadRepository } from './upload.repository';
-import * as sharp from 'sharp';
+import  sharp from 'sharp';
 import { v2 as cloudinary } from 'cloudinary';
 import { ConfigService } from '@nestjs/config';
 
@@ -61,7 +61,7 @@ export class UploadService {
         },
         (error, result) => {
           if (error) reject(error);
-          else resolve(result.secure_url);
+          else resolve(result!.secure_url);
         },
       ).end(buffer);
     });
