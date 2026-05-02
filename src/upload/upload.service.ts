@@ -19,8 +19,9 @@ export class UploadService {
       api_key: this.configService.get('CLOUDINARY_API_KEY'),
       api_secret: this.configService.get('CLOUDINARY_API_SECRET'),
     });
+    this.logger.log(`Cloudinary config: cloud=${this.configService.get('CLOUDINARY_CLOUD_NAME')}, key=${this.configService.get('CLOUDINARY_API_KEY')?.slice(0,5)}..., secret=${this.configService.get('CLOUDINARY_API_SECRET')?.slice(0,5)}...`);
   }
-
+ 
   async saveFile(file: Express.Multer.File): Promise<Upload> {
     // Compress image to buffer
     const compressedBuffer = await this.compressImage(file);
@@ -52,20 +53,22 @@ export class UploadService {
   }
 
   private uploadToCloudinary(buffer: Buffer, filename: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          resource_type: 'image',
-          folder: 'voltix',
-          public_id: filename.replace(/\.[^/.]+$/, ''),
-        },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result!.secure_url);
-        },
-      ).end(buffer);
-    });
-  }
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'image',
+        folder: 'voltix',
+        public_id: filename.replace(/\.[^/.]+$/, ''),
+      },
+      (error, result) => {
+        if (error) {
+          this.logger.error('Cloudinary upload error:', JSON.stringify(error));
+          reject(error);
+        } else resolve(result!.secure_url);
+      },
+    ).end(buffer);
+  });
+}
 
   async findAll() {
     return this.uploadRepository.findAll();
