@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Upload } from './upload.entity';
 import { UploadRepository } from './upload.repository';
-import  sharp from 'sharp';
+import * as sharp from 'sharp';
 import { v2 as cloudinary } from 'cloudinary';
 import { ConfigService } from '@nestjs/config';
 
@@ -19,15 +19,20 @@ export class UploadService {
       api_key: this.configService.get('CLOUDINARY_API_KEY'),
       api_secret: this.configService.get('CLOUDINARY_API_SECRET'),
     });
-    this.logger.log(`Cloudinary config: cloud=${this.configService.get('CLOUDINARY_CLOUD_NAME')}, key=${this.configService.get('CLOUDINARY_API_KEY')?.slice(0,5)}..., secret=${this.configService.get('CLOUDINARY_API_SECRET')?.slice(0,5)}...`);
+    this.logger.log(
+      `Cloudinary config: cloud=${this.configService.get('CLOUDINARY_CLOUD_NAME')}, key=${this.configService.get('CLOUDINARY_API_KEY')?.slice(0, 5)}..., secret=${this.configService.get('CLOUDINARY_API_SECRET')?.slice(0, 5)}...`,
+    );
   }
- 
+
   async saveFile(file: Express.Multer.File): Promise<Upload> {
     // Compress image to buffer
     const compressedBuffer = await this.compressImage(file);
 
     // Upload to Cloudinary
-    const cloudinaryUrl = await this.uploadToCloudinary(compressedBuffer, file.originalname);
+    const cloudinaryUrl = await this.uploadToCloudinary(
+      compressedBuffer,
+      file.originalname,
+    );
 
     const upload = await this.uploadRepository.create({
       filename: file.originalname,
@@ -43,7 +48,8 @@ export class UploadService {
   }
 
   private async compressImage(file: Express.Multer.File): Promise<Buffer> {
-    return sharp(file.buffer)
+    return sharp
+      .default(file.buffer)
       .resize(1200, 1200, {
         fit: 'inside',
         withoutEnlargement: true,
@@ -52,23 +58,31 @@ export class UploadService {
       .toBuffer();
   }
 
-  private uploadToCloudinary(buffer: Buffer, filename: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload_stream(
-      {
-        resource_type: 'image',
-        folder: 'voltix',
-        public_id: filename.replace(/\.[^/.]+$/, ''),
-      },
-      (error, result) => {
-        if (error) {
-          this.logger.error('Cloudinary upload error:', JSON.stringify(error));
-          reject(error);
-        } else resolve(result!.secure_url);
-      },
-    ).end(buffer);
-  });
-}
+  private uploadToCloudinary(
+    buffer: Buffer,
+    filename: string,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader
+        .upload_stream(
+          {
+            resource_type: 'image',
+            folder: 'voltix',
+            public_id: filename.replace(/\.[^/.]+$/, ''),
+          },
+          (error, result) => {
+            if (error) {
+              this.logger.error(
+                'Cloudinary upload error:',
+                JSON.stringify(error),
+              );
+              reject(error);
+            } else resolve(result!.secure_url);
+          },
+        )
+        .end(buffer);
+    });
+  }
 
   async findAll() {
     return this.uploadRepository.findAll();
